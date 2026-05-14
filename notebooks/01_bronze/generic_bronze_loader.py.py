@@ -63,4 +63,43 @@ records_written = 0
 
 # COMMAND ----------
 
+try:
+    # Read the bronze_ingestion_config table to get the table Nmae
+    config = get_bronze_config(spark, catalog_name, entity_name)
+    target_table = config["target_table_full_name"]
+
+    # To check the target table is already existing or not
+    if not spark.catalog.tableExists(target_table):
+        raise ValueError(f"Target table does not exist: {target_table}")
+
+    # To start the logging
+    start_pipeline(spark, catalog_name, pipeline_run_id, entity_name)
+    table_load_id = start_load(spark, catalog_name, pipeline_run_id, config)
+
+    before_count = spark.table(target_table).count()
+
+    copy_sql = build_copy_into_sql(config, pipeline_run_id, force_reload)
+    print(copy_sql)
+
+    copy_result_df = spark.sql(copy_sql)
+    display(copy_result_df)
+
+    after_count = spark.table(target_table).count()
+    records_written = max(after_count - before_count, 0)
+
+    end_load_success(spark, catalog_name, table_load_id, records_written)
+    end_pipeline_success(spark, catalog_name, pipeline_run_id, records_written)
+
+    dbutils.notebook.exit(
+        f"SUCCESS | entity={entity_name} | records_written={records_written} | pipeline_run_id={pipeline_run_id}"
+    )
+
+except Exception as error:
+    if table_load_id:
+        end_load_failure(spark, catalog_name, table_load_id, str(error))
+
+    end_pipeline_failure(spark, catalog_name, pipeline_run_id, str(error))
+    log_error(spark, catalog_name, pipeline_run_id, config, error)
+
+    raise
 
