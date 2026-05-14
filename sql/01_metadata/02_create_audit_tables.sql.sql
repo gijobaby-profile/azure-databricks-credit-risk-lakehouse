@@ -25,16 +25,7 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.audit.pipeline_run_log (
 USING DELTA
 PARTITIONED BY (created_date)
 COMMENT 'Pipeline-level audit log for Credit Risk Lakehouse workflows'
-TBLPROPERTIES (
-  'project' = 'credit-risk-lakehouse',
-  'environment' = 'dev',
-  'data_layer' = 'audit',
-  'data_classification' = 'operational',
-  'owner' = 'gijo-baby',
-  'business_domain' = 'credit-risk',
-  'quality_level' = 'operational-log',
-  'managed_by' = 'databricks-asset-bundles'
-);
+;
 
 -- COMMAND ----------
 
@@ -63,16 +54,7 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.audit.table_load_log (
 USING DELTA
 PARTITIONED BY (created_date)
 COMMENT 'Table-level load audit log for ingestion and transformation jobs'
-TBLPROPERTIES (
-  'project' = 'credit-risk-lakehouse',
-  'environment' = 'dev',
-  'data_layer' = 'audit',
-  'data_classification' = 'operational',
-  'owner' = 'gijo-baby',
-  'business_domain' = 'credit-risk',
-  'quality_level' = 'operational-log',
-  'managed_by' = 'databricks-asset-bundles'
-);
+;
 
 -- COMMAND ----------
 
@@ -95,16 +77,7 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.audit.error_log (
 USING DELTA
 PARTITIONED BY (created_date)
 COMMENT 'Centralized error log for Credit Risk Lakehouse pipeline failures'
-TBLPROPERTIES (
-  'project' = 'credit-risk-lakehouse',
-  'environment' = 'dev',
-  'data_layer' = 'audit',
-  'data_classification' = 'operational',
-  'owner' = 'gijo-baby',
-  'business_domain' = 'credit-risk',
-  'quality_level' = 'operational-log',
-  'managed_by' = 'databricks-asset-bundles'
-);
+;
 
 -- COMMAND ----------
 
@@ -123,14 +96,5 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.audit.operational_metrics (
 USING DELTA
 PARTITIONED BY (metric_date)
 COMMENT 'Operational metrics table for monitoring pipeline performance and data volumes'
-TBLPROPERTIES (
-  'project' = 'credit-risk-lakehouse',
-  'environment' = 'dev',
-  'data_layer' = 'audit',
-  'data_classification' = 'operational',
-  'owner' = 'gijo-baby',
-  'business_domain' = 'credit-risk',
-  'quality_level' = 'operational-log',
-  'managed_by' = 'databricks-asset-bundles'
-);
+;
 
