@@ -9,6 +9,7 @@ import uuid
 
 # COMMAND ----------
 
+# This is to makesure no error when tryin to import python files created in different folders
 repo_root = "/Workspace/Repos/gijobaby-profile/azure-databricks-credit-risk-lakehouse"
 if repo_root not in sys.path:
     sys.path.append(repo_root)

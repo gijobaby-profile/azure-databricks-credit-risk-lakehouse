@@ -46,7 +46,3 @@ def get_bronze_config(spark, catalog_name: str, entity_name: str) -> dict:
         raise ValueError(f"Multiple enabled Bronze ingestion configs found for entity_name={entity_name}")
 
     return rows[0].asDict()
-
-
-
-
