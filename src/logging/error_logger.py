@@ -16,24 +16,50 @@ def _escape(value) -> str:
 # =====================================================================
 # Error log into audit.error_log
 # =====================================================================
-def log_error(spark, catalog_name: str, pipeline_run_id: str, config: dict, error: Exception) -> None:
+def log_error(
+    spark,
+    catalog_name: str,
+    pipeline_run_id: str,
+    config: dict,
+    error: Exception,
+    failed_record_json: str = None
+) -> None:
+
     table_name = config.get("target_table_full_name", "UNKNOWN") if config else "UNKNOWN"
-    source_path = config.get("source_path", "UNKNOWN") if config else "UNKNOWN"
+    source_file_path = config.get("source_path", "UNKNOWN") if config else "UNKNOWN"
     entity_name = config.get("entity_name", "UNKNOWN") if config else "UNKNOWN"
 
     spark.sql(f"""
         INSERT INTO {catalog_name}.audit.error_log
+        (
+            error_id,
+            pipeline_run_id,
+            job_name,
+            task_name,
+            table_name,
+            error_type,
+            error_code,
+            error_message,
+            error_stack_trace,
+            source_file_path,
+            failed_record_json,
+            severity,
+            created_timestamp,
+            created_date
+        )
         SELECT
-            '{str(uuid.uuid4())}' AS error_id,
-            '{_escape(pipeline_run_id)}' AS pipeline_run_id,
-            'bronze_copy_into' AS job_name,
-            '{_escape(entity_name)}' AS task_name,
-            '{_escape(table_name)}' AS table_name,
-            'TECHNICAL' AS error_type,
-            'BRONZE_COPY_INTO_FAILED' AS error_code,
-            '{_escape(str(error))}' AS error_message,
-            '{_escape(traceback.format_exc())}' AS error_stack_trace,
-            '{_escape(source_path)}' AS source_path,
-            'HIGH' AS severity,
-            current_timestamp() AS created_timestamp
+            '{str(uuid.uuid4())}',
+            '{_escape(pipeline_run_id)}',
+            'bronze_copy_into',
+            '{_escape(entity_name)}',
+            '{_escape(table_name)}',
+            'TECHNICAL',
+            'BRONZE_COPY_INTO_FAILED',
+            '{_escape(str(error))}',
+            '{_escape(traceback.format_exc())}',
+            '{_escape(source_file_path)}',
+            CAST(NULL AS STRING),
+            'HIGH',
+            current_timestamp(),
+            current_date()
     """)

@@ -16,27 +16,46 @@ def _escape(value) -> str:
 # =====================================================================
 # Creates one STARTED record in pipeline_run_log when the Bronze pipeline starts.
 # =====================================================================
-
 def start_pipeline(spark, catalog_name: str, pipeline_run_id: str, entity_name: str) -> None:
     spark.sql(f"""
         INSERT INTO {catalog_name}.audit.pipeline_run_log
+        (
+            pipeline_run_id,
+            pipeline_name,
+            job_id,
+            job_run_id,
+            environment,
+            trigger_type,
+            start_timestamp,
+            end_timestamp,
+            status,
+            records_read,
+            records_written,
+            records_rejected,
+            error_message,
+            created_by,
+            created_timestamp,
+            created_date
+        )
         SELECT
-            '{_escape(pipeline_run_id)}' AS pipeline_run_id,
-            'bronze_copy_into' AS pipeline_name,
-            CAST(NULL AS STRING) AS job_id,
-            CAST(NULL AS STRING) AS run_id,
-            'dev' AS environment,
-            'manual' AS trigger_type,
-            current_timestamp() AS start_timestamp,
-            CAST(NULL AS TIMESTAMP) AS end_timestamp,
-            'STARTED' AS status,
-            CAST(0 AS BIGINT) AS records_read,
-            CAST(0 AS BIGINT) AS records_written,
-            CAST(0 AS BIGINT) AS records_rejected,
-            CAST(NULL AS STRING) AS error_message,
-            current_user() AS created_by,
-            current_timestamp() AS created_timestamp
+            '{_escape(pipeline_run_id)}',
+            'bronze_copy_into',
+            CAST(NULL AS STRING),
+            CAST(NULL AS STRING),
+            'dev',
+            'manual',
+            current_timestamp(),
+            CAST(NULL AS TIMESTAMP),
+            'STARTED',
+            CAST(0 AS BIGINT),
+            CAST(0 AS BIGINT),
+            CAST(0 AS BIGINT),
+            CAST(NULL AS STRING),
+            current_user(),
+            current_timestamp(),
+            current_date()
     """)
+
 
 # =====================================================================
 # Updates pipeline_run_log as SUCCESS after the Bronze load completes.
@@ -73,27 +92,51 @@ def start_load(spark, catalog_name: str, pipeline_run_id: str, config: dict) -> 
 
     spark.sql(f"""
         INSERT INTO {catalog_name}.audit.table_load_log
+        (
+            table_load_id,
+            pipeline_run_id,
+            job_name,
+            task_name,
+            source_system_id,
+            source_file_name,
+            source_file_path,
+            target_table_name,
+            load_type,
+            write_mode,
+            start_timestamp,
+            end_timestamp,
+            status,
+            records_read,
+            records_written,
+            records_rejected,
+            source_file_count,
+            error_message,
+            created_timestamp,
+            created_date
+        )
         SELECT
-            '{table_load_id}' AS table_load_id,
-            '{_escape(pipeline_run_id)}' AS pipeline_run_id,
-            'bronze_copy_into' AS job_name,
-            '{_escape(config["entity_name"])}' AS task_name,
-            '{_escape(config["source_system"])}' AS source_system_id,
-            '{_escape(config["entity_name"])}' AS source_file_name,
-            '{_escape(config["source_path"])}' AS source_path,
-            '{_escape(config["target_table_full_name"])}' AS target_table_name,
-            'APPEND' AS load_type,
-            'COPY_INTO' AS write_mode,
-            current_timestamp() AS start_timestamp,
-            CAST(NULL AS TIMESTAMP) AS end_timestamp,
-            'STARTED' AS status,
-            CAST(0 AS BIGINT) AS records_read,
-            CAST(0 AS BIGINT) AS records_written,
-            CAST(0 AS BIGINT) AS records_rejected,
-            CAST(NULL AS INT) AS source_file_count,
-            CAST(NULL AS STRING) AS error_message,
-            current_timestamp() AS created_timestamp
+            '{table_load_id}',
+            '{_escape(pipeline_run_id)}',
+            'bronze_copy_into',
+            '{_escape(config["entity_name"])}',
+            '{_escape(config["source_system"])}',
+            '{_escape(config["entity_name"])}',
+            '{_escape(config["source_path"])}',
+            '{_escape(config["target_table_full_name"])}',
+            'APPEND',
+            'COPY_INTO',
+            current_timestamp(),
+            CAST(NULL AS TIMESTAMP),
+            'STARTED',
+            CAST(0 AS BIGINT),
+            CAST(0 AS BIGINT),
+            CAST(0 AS BIGINT),
+            CAST(NULL AS INT),
+            CAST(NULL AS STRING),
+            current_timestamp(),
+            current_date()
     """)
+
     return table_load_id
 
 # =====================================================================

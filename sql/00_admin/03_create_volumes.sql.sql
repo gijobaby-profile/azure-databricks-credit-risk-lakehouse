@@ -62,3 +62,9 @@ DROP VOLUME IF EXISTS credit_risk_dev.files.vol_bronze_checkpoint_dev;
 DROP VOLUME IF EXISTS credit_risk_dev.files.vol_silver_checkpoint_dev;
 DROP VOLUME IF EXISTS credit_risk_dev.files.vol_gold_checkpoint_dev;
 
+
+-- COMMAND ----------
+
+CREATE EXTERNAL VOLUME IF NOT EXISTS credit_risk_dev.files.vol_logs_home_credit_dev
+LOCATION 'abfss://logs@stcrcurateddevuks001.dfs.core.windows.net/home_credit/'
+COMMENT 'External volume for Home Credit pipeline runtime logs';
