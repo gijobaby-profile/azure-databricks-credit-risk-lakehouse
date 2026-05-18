@@ -5,13 +5,7 @@
 # =====================================================================
 
 import uuid
-
-# =====================================================================
-# to escape the ' used as appostope eg 'beauro's_file' and handle Null value
-# =====================================================================
-
-def _escape(value) -> str:
-    return "" if value is None else str(value).replace("'", "''")
+from src.utils.sql_utils import escape_sql, bool_to_sql
 
 # =====================================================================
 # Creates one STARTED record in pipeline_run_log when the Bronze pipeline starts.
@@ -38,7 +32,7 @@ def start_pipeline(spark, catalog_name: str, pipeline_run_id: str, entity_name: 
             created_date
         )
         SELECT
-            '{_escape(pipeline_run_id)}',
+            '{escape_sql(pipeline_run_id)}',
             'bronze_copy_into',
             CAST(NULL AS STRING),
             CAST(NULL AS STRING),
@@ -69,7 +63,7 @@ def end_pipeline_success(spark, catalog_name: str, pipeline_run_id: str, records
             records_read = {records_written},
             records_written = {records_written},
             records_rejected = 0
-        WHERE pipeline_run_id = '{_escape(pipeline_run_id)}'
+        WHERE pipeline_run_id = '{escape_sql(pipeline_run_id)}'
     """)
 
 # =====================================================================
@@ -80,8 +74,8 @@ def end_pipeline_failure(spark, catalog_name: str, pipeline_run_id: str, error_m
         UPDATE {catalog_name}.audit.pipeline_run_log
         SET end_timestamp = current_timestamp(),
             status = 'FAILED',
-            error_message = '{_escape(error_message)}'
-        WHERE pipeline_run_id = '{_escape(pipeline_run_id)}'
+            error_message = '{escape_sql(error_message)}'
+        WHERE pipeline_run_id = '{escape_sql(pipeline_run_id)}'
     """)
 
 # =====================================================================
@@ -116,13 +110,13 @@ def start_load(spark, catalog_name: str, pipeline_run_id: str, config: dict) -> 
         )
         SELECT
             '{table_load_id}',
-            '{_escape(pipeline_run_id)}',
+            '{escape_sql(pipeline_run_id)}',
             'bronze_copy_into',
-            '{_escape(config["entity_name"])}',
-            '{_escape(config["source_system"])}',
-            '{_escape(config["entity_name"])}',
-            '{_escape(config["source_path"])}',
-            '{_escape(config["target_table_full_name"])}',
+            '{escape_sql(config["entity_name"])}',
+            '{escape_sql(config["source_system"])}',
+            '{escape_sql(config["entity_name"])}',
+            '{escape_sql(config["source_path"])}',
+            '{escape_sql(config["target_table_full_name"])}',
             'APPEND',
             'COPY_INTO',
             current_timestamp(),
@@ -150,7 +144,7 @@ def end_load_success(spark, catalog_name: str, table_load_id: str, records_writt
             records_read = {records_written},
             records_written = {records_written},
             records_rejected = 0
-        WHERE table_load_id = '{_escape(table_load_id)}'
+        WHERE table_load_id = '{escape_sql(table_load_id)}'
     """)
 
 # =====================================================================
@@ -161,6 +155,6 @@ def end_load_failure(spark, catalog_name: str, table_load_id: str, error_message
         UPDATE {catalog_name}.audit.table_load_log
         SET end_timestamp = current_timestamp(),
             status = 'FAILED',
-            error_message = '{_escape(error_message)}'
-        WHERE table_load_id = '{_escape(table_load_id)}'
+            error_message = '{escape_sql(error_message)}'
+        WHERE table_load_id = '{escape_sql(table_load_id)}'
     """)

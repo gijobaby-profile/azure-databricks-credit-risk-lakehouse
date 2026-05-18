@@ -6,12 +6,8 @@
 
 import traceback
 import uuid
+from src.utils.sql_utils import escape_sql, bool_to_sql
 
-# =====================================================================
-# to escape the ' used as appostope eg 'beauro's_file' and handle Null value
-# =====================================================================
-def _escape(value) -> str:
-    return "" if value is None else str(value).replace("'", "''")
 
 # =====================================================================
 # Error log into audit.error_log
@@ -49,15 +45,15 @@ def log_error(
         )
         SELECT
             '{str(uuid.uuid4())}',
-            '{_escape(pipeline_run_id)}',
+            '{escape_sql(pipeline_run_id)}',
             'bronze_copy_into',
-            '{_escape(entity_name)}',
-            '{_escape(table_name)}',
+            '{escape_sql(entity_name)}',
+            '{escape_sql(table_name)}',
             'TECHNICAL',
             'BRONZE_COPY_INTO_FAILED',
-            '{_escape(str(error))}',
-            '{_escape(traceback.format_exc())}',
-            '{_escape(source_file_path)}',
+            '{escape_sql(str(error))}',
+            '{escape_sql(traceback.format_exc())}',
+            '{escape_sql(source_file_path)}',
             CAST(NULL AS STRING),
             'HIGH',
             current_timestamp(),

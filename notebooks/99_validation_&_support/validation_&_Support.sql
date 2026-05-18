@@ -41,3 +41,17 @@ SELECT *
 FROM credit_risk_dev.audit.pipeline_run_log
 ORDER BY created_timestamp DESC
 LIMIT 20;
+
+-- COMMAND ----------
+
+        SELECT
+            entity_name,
+            source_column_name,
+            source_column_position,
+            target_column_name,
+            target_data_type,
+            is_required,
+            is_dedup_key,
+            is_active,
+            column_sequence
+        FROM credit_risk_dev.config.silver_column_config

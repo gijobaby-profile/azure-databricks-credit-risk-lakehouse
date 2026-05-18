@@ -4,12 +4,7 @@
 # Purpose     : Read Bronze ingestion configuration file
 # =====================================================================
 
-# =====================================================================
-# to escape the ' used as appostope eg 'beauro's_file' and handle Null value
-# =====================================================================
-def _escape(value) -> str:
-    return "" if value is None else str(value).replace("'", "''")
-
+from src.utils.sql_utils import escape_sql, bool_to_sql
 
 # =====================================================================
 # Return one enabled Bronze ingestion config row for an entity
@@ -35,7 +30,7 @@ def get_bronze_config(spark, catalog_name: str, entity_name: str) -> dict:
             load_enabled,
             load_sequence
         FROM {catalog_name}.config.bronze_ingestion_config
-        WHERE lower(entity_name) = lower('{_escape(entity_name)}')
+        WHERE lower(entity_name) = lower('{escape_sql(entity_name)}')
           AND load_enabled = true
     """).collect()
 
