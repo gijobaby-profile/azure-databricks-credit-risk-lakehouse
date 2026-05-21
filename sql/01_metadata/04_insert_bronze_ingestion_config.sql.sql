@@ -1,0 +1,130 @@
+-- Databricks notebook source
+-- MAGIC %md
+-- MAGIC #### Insert Bronze ingestion configuration records
+
+-- COMMAND ----------
+
+DELETE FROM credit_risk_dev.config.bronze_ingestion_config;
+
+-- COMMAND ----------
+
+INSERT INTO credit_risk_dev.config.bronze_ingestion_config
+(
+    entity_name,
+    source_system,
+    source_path,
+    target_table_full_name,
+    file_format,
+    delimiter,
+    header_flag,
+    infer_schema_flag,
+    merge_schema_flag,
+    load_enabled,
+    load_sequence
+)
+VALUES
+(
+    'application_train',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/application_train/',
+    'credit_risk_dev.bronze.application_train',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    1
+),
+(
+    'application_test',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/application_test/',
+    'credit_risk_dev.bronze.application_test',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    2
+),
+(
+    'bureau',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/bureau/',
+    'credit_risk_dev.bronze.bureau',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    3
+),
+(
+    'bureau_balance',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/bureau_balance/',
+    'credit_risk_dev.bronze.bureau_balance',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    4
+),
+(
+    'previous_application',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/previous_application/',
+    'credit_risk_dev.bronze.previous_application',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    5
+),
+(
+    'pos_cash_balance',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/pos_cash_balance/',
+    'credit_risk_dev.bronze.pos_cash_balance',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    6
+),
+(
+    'credit_card_balance',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/credit_card_balance/',
+    'credit_risk_dev.bronze.credit_card_balance',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    7
+),
+(
+    'installments_payments',
+    'home_credit',
+    '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/installments_payments/',
+    'credit_risk_dev.bronze.installments_payments',
+    'csv',
+    ',',
+    true,
+    false,
+    true,
+    true,
+    8
+);
+
