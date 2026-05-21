@@ -26,7 +26,8 @@ def get_silver_column_config(spark, catalog_name: str, entity_name: str) -> List
             is_required,
             is_dedup_key,
             is_active,
-            column_sequence
+            column_sequence,
+            reject_on_cast_failure
         FROM {catalog_name}.config.silver_column_config
         WHERE lower(entity_name) = lower('{escape_sql(entity_name)}')
           AND is_active = true
@@ -35,7 +36,8 @@ def get_silver_column_config(spark, catalog_name: str, entity_name: str) -> List
 
     if not rows:
         raise ValueError(f"No active Silver column config found for entity_name: {entity_name}")
-
+    
+    # For every Row object in rows, convert that Row into a dictionary.Return the final list of dictionaries.
     return [row.asDict() for row in rows]
 
 
