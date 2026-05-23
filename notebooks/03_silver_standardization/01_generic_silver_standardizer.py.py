@@ -256,3 +256,14 @@ except Exception as error:
     raise
 
     
+
+# COMMAND ----------
+
+log_dir = f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/pipeline/silver/{entity_name}/"
+
+files = dbutils.fs.ls(log_dir)
+
+latest_file = sorted(files, key=lambda x: x.modificationTime, reverse=True)[0].path
+
+print(f"Latest log file: {latest_file}")
+print(dbutils.fs.head(latest_file, 10000))
