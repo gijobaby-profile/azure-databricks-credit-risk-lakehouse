@@ -1,4 +1,8 @@
 -- Databricks notebook source
+select * from credit_risk_dev.silver.standardized_installments_payments
+
+-- COMMAND ----------
+
 -- MAGIC %python
 -- MAGIC from pyspark.sql import functions as F
 -- MAGIC df= spark.sql("""select * from credit_risk_dev.dq.data_quality_rules""")
@@ -8,6 +12,16 @@
 -- MAGIC display(df1)
 -- MAGIC
 -- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC df.explain(True)
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC display(df.describe())
 
 -- COMMAND ----------
 
@@ -166,3 +180,64 @@ select * from credit_risk_dev.config.silver_column_config
 
 update  credit_risk_dev.config.silver_column_config
 set reject_on_cast_failure=true
+
+-- COMMAND ----------
+
+select count(*) from credit_risk_dev.bronze.credit_card_balance
+
+-- COMMAND ----------
+
+select *  FROM credit_risk_dev.config.silver_column_config
+        WHERE lower(entity_name) = lower('application_test');
+
+
+
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC
+-- MAGIC from typing import List, Dict, Tuple, Optional
+-- MAGIC
+-- MAGIC from pyspark.sql import DataFrame, Column
+-- MAGIC from pyspark.sql import functions as F
+-- MAGIC from pyspark.sql.window import Window
+-- MAGIC
+-- MAGIC from src.utils.sql_utils import quote_identifier
+-- MAGIC from src.utils.sql_utils import escape_sql, bool_to_sql
+-- MAGIC
+-- MAGIC def get_silver_column_config(spark, catalog_name: str, entity_name: str) -> List[Dict]:
+-- MAGIC     if not str(entity_name or "").strip():
+-- MAGIC         raise ValueError("entity_name is required")
+-- MAGIC
+-- MAGIC     rows = spark.sql(f"""
+-- MAGIC         SELECT
+-- MAGIC             entity_name,
+-- MAGIC             source_column_name,
+-- MAGIC             source_column_position,
+-- MAGIC             target_column_name,
+-- MAGIC             target_data_type,
+-- MAGIC             is_required,
+-- MAGIC             is_dedup_key,
+-- MAGIC             is_active,
+-- MAGIC             column_sequence,
+-- MAGIC             reject_on_cast_failure
+-- MAGIC         FROM {catalog_name}.config.silver_column_config
+-- MAGIC         WHERE lower(entity_name) = lower('{escape_sql(entity_name)}')
+-- MAGIC           AND is_active = true
+-- MAGIC         ORDER BY column_sequence
+-- MAGIC     """).collect()
+-- MAGIC
+-- MAGIC     if not rows:
+-- MAGIC         raise ValueError(f"No active Silver column config found for entity_name: {entity_name}")
+-- MAGIC     
+-- MAGIC     # For every Row object in rows, convert that Row into a dictionary.Return the final list of dictionaries.
+-- MAGIC     return [row.asDict() for row in rows]
+-- MAGIC
+-- MAGIC
+-- MAGIC
+-- MAGIC df=get_silver_column_config(spark,catalog_name="credit_risk_dev",entity_name="application_test")
+-- MAGIC
+-- MAGIC display(df)

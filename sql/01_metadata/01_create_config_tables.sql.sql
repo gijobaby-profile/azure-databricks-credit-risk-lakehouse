@@ -36,4 +36,46 @@ USING DELTA;
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC #### Silver Conformance layer ( reads and prepares the base source data )
 
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS credit_risk_dev.config.silver_conformance_entity_config (
+    entity_name STRING COMMENT 'Conformed entity name, for example loan_application',
+    target_catalog_name STRING COMMENT 'Target catalog name',
+    target_schema_name STRING COMMENT 'Target schema name',
+    target_table_name STRING COMMENT 'Target table name',
+    source_query STRING COMMENT 'SQL query used to build the conformed source DataFrame',
+    load_strategy STRING COMMENT 'SCD2, REPLACE_BUSINESS_DT, MERGE, or OVERWRITE',
+    business_key_columns ARRAY<STRING> COMMENT 'Business key columns used for merge/deduplication',
+    hash_columns ARRAY<STRING> COMMENT 'Columns used to create record_hash',
+    effective_timestamp_column STRING COMMENT 'Timestamp column used as effective_from for SCD2',
+    is_scd2 BOOLEAN COMMENT 'Whether the entity uses SCD Type 2',
+    load_enabled BOOLEAN COMMENT 'Whether this entity is enabled for processing',
+    load_sequence INT COMMENT 'Entity processing order',
+    created_timestamp TIMESTAMP COMMENT 'Config creation timestamp',
+    updated_timestamp TIMESTAMP COMMENT 'Config update timestamp'
+)
+USING DELTA
+COMMENT 'Metadata configuration for Silver Conformance business entities';
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC #### Silver Conformance layer ( applies derived/calculated columns )
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS credit_risk_dev.config.silver_conformance_derived_column_config (
+    entity_name STRING COMMENT 'Conformed entity name',
+    derived_column_name STRING COMMENT 'Derived column name',
+    derived_sql_expression STRING COMMENT 'Spark SQL expression used to calculate derived column',
+    target_data_type STRING COMMENT 'Target datatype for derived column',
+    is_active BOOLEAN COMMENT 'Whether derived column is active',
+    column_sequence INT COMMENT 'Execution/order sequence',
+    created_timestamp TIMESTAMP COMMENT 'Config creation timestamp',
+    updated_timestamp TIMESTAMP COMMENT 'Config update timestamp'
+)
+USING DELTA
+COMMENT 'Metadata configuration for derived columns in Silver Conformance layer';

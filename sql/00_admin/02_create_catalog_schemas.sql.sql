@@ -35,6 +35,12 @@ COMMENT 'Silver schema containing cleaned, standardized, validated, and conforme
 
 -- COMMAND ----------
 
+CREATE SCHEMA IF NOT EXISTS credit_risk_dev.silver_conformed
+MANAGED LOCATION 'abfss://uc-managed@stcrcurateddevuks001.dfs.core.windows.net/credit_risk_dev/silver_conformed/'
+COMMENT 'Silver Conformed layer containing reusable business-aligned credit risk entities';
+
+-- COMMAND ----------
+
 CREATE SCHEMA IF NOT EXISTS credit_risk_dev.gold
 MANAGED LOCATION 'abfss://uc-managed@stcrcurateddevuks001.dfs.core.windows.net/credit_risk_dev/gold/'
 COMMENT 'Gold schema containing analytics-ready risk marts, feature store tables, and dashboard outputs';
