@@ -26,14 +26,14 @@ if repo_root not in sys.path:
 
 # COMMAND ----------
 
-from src.conformance.silver_conformance_config_reader import (
+from src.silver_conformance.silver_conformance_config_reader import (
     get_silver_conformance_entity_config,
     get_silver_conformance_derived_column_config,
     get_target_table_full_name,
 )
-from src.conformance.silver_conformance_transformer import build_conformed_dataframe
-from src.conformance.silver_conformance_writer import write_conformed_entity
-from src.conformance.silver_conformance_dq_validator import (
+from src.silver_conformance.silver_conformance_transformer import build_conformed_dataframe
+from src.silver_conformance.silver_conformance_writer import write_conformed_entity
+from src.silver_conformance.silver_conformance_dq_validator import (
     read_active_conformance_dq_rules,
     apply_conformance_dq_rules,
     write_conformance_rejected_records,
