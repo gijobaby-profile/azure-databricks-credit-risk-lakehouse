@@ -33,9 +33,53 @@ SELECT
         pipeline_run_id,
         standardization_timestamp
     FROM (
-        SELECT *, ''train'' AS application_source FROM credit_risk_dev.silver.standardized_application_train
-        UNION BY NAME
-        SELECT *, ''test'' AS application_source FROM credit_risk_dev.silver.standardized_application_test
+        SELECT
+            sk_id_curr AS customer_id,
+            code_gender AS gender,
+            flag_own_car AS own_car_flag,
+            flag_own_realty AS own_realty_flag,
+            cnt_children AS children_count,
+            cnt_fam_members AS family_members_count,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            organization_type,
+            days_birth,
+            days_employed,
+            region_population_relative,
+            ''train'' AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_train
+        WHERE sk_id_curr IS NOT NULL
+
+        UNION ALL
+
+        SELECT
+            sk_id_curr AS customer_id,
+            code_gender AS gender,
+            flag_own_car AS own_car_flag,
+            flag_own_realty AS own_realty_flag,
+            cnt_children AS children_count,
+            cnt_fam_members AS family_members_count,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            organization_type,
+            days_birth,
+            days_employed,
+            region_population_relative,
+            ''test'' AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_test
+        WHERE sk_id_curr IS NOT NULL
     )
     WHERE customer_id IS NOT NULL
     ',
@@ -78,9 +122,55 @@ SELECT
         pipeline_run_id,
         standardization_timestamp
     FROM (
-        SELECT *, ''train'' AS application_source FROM credit_risk_dev.silver.standardized_application_train
-        UNION BY NAME
-        SELECT *, ''test'' AS application_source FROM credit_risk_dev.silver.standardized_application_test
+        SELECT
+            sk_id_curr AS customer_id,
+            ''train'' AS application_source,
+            target,
+            name_contract_type AS contract_type,
+            amt_credit AS credit_amount,
+            amt_annuity AS annuity_amount,
+            amt_goods_price AS goods_price,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            days_birth,
+            days_employed,
+            days_registration,
+            days_id_publish,
+            ''train'' AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_train
+        WHERE sk_id_curr IS NOT NULL
+
+        UNION ALL
+
+        SELECT
+            sk_id_curr AS customer_id,
+            ''test'' AS application_source,
+            CAST(NULL AS INT) AS target,
+            name_contract_type AS contract_type,
+            amt_credit AS credit_amount,
+            amt_annuity AS annuity_amount,
+            amt_goods_price AS goods_price,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            days_birth,
+            days_employed,
+            days_registration,
+            days_id_publish,
+            ''test'' AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_test
+        WHERE sk_id_curr IS NOT NULL
     )
     ',
     'REPLACE_BUSINESS_DT',
@@ -170,3 +260,4 @@ SELECT 'pos_cash_balance','credit_risk_dev','silver','conformed_pos_cash_balance
     array('business_dt','customer_id','previous_application_id','months_balance'),
     array('customer_id','previous_application_id','months_balance','installment_future_count','installment_count','contract_status','days_past_due','days_past_due_def'),
     'standardization_timestamp', false, true, 7, current_timestamp(), current_timestamp();
+
