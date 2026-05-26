@@ -13,8 +13,11 @@ def build_source_dataframe(spark, entity_config: Dict) -> DataFrame:
     return spark.sql(source_query)
 
 
+#=========================================================================
+# Apply metadata-driven derived columns using Spark SQL expressions.
+#=========================================================================
 def apply_derived_columns(df: DataFrame, derived_config: List[Dict]) -> DataFrame:
-    """Apply metadata-driven derived columns using Spark SQL expressions."""
+    
     output_df = df
 
     for rule in derived_config:
