@@ -441,8 +441,9 @@ Planned improvements include:
 - Power BI dashboard integration
 - Databricks Workflow job definitions
 - CI/CD deployment with environment-specific parameters
+- dbt implementation in the Gold Layer for modular SQL modelling, testing, and documentation
+- Databricks Asset Bundles for workflow deployment, environment configuration, and CI/CD readiness
 - Automated unit testing for PySpark transformations
-- Great Expectations or Deequ integration for advanced data quality
 - Incremental load support for selected source entities
 - Unity Catalog lineage documentation
 - ML feature engineering for PD/LGD/EAD-style credit risk modelling
