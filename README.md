@@ -137,7 +137,7 @@ For high-volume daily snapshot-style entities, replacing only the relevant `busi
 | Query Language | Spark SQL |
 | Architecture Pattern | Medallion Architecture |
 | Data Quality | Metadata-driven validation rules |
-| Orchestration | Databricks notebooks |
+| Orchestration | Azure Data Factory |
 | Version Control | GitHub |
 | CI/CD Extension | GitHub Actions-ready structure |
 | Domain | Credit Risk / Banking Data Engineering |
