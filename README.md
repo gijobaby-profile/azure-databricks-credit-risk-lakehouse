@@ -440,6 +440,7 @@ Planned improvements include:
 - Gold-layer credit risk feature marts
 - Power BI dashboard integration
 - Databricks Workflow job definitions
+- Azure Data Factory orchestration for end-to-end pipeline execution using file-watcher polling and tumbling/window-based trigger patterns
 - CI/CD deployment with environment-specific parameters
 - dbt implementation in the Gold Layer for modular SQL modelling, testing, and documentation
 - Databricks Asset Bundles for workflow deployment, environment configuration, and CI/CD readiness
