@@ -7,32 +7,93 @@ select * from credit_risk_dev.config.silver_column_config
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC from typing import Dict, List
--- MAGIC from src.utils.sql_utils import escape_sql
--- MAGIC def get_silver_conformance_entity_config(spark, catalog_name: str, entity_name: str) -> Dict:
--- MAGIC     rows = spark.sql(f"""
--- MAGIC         SELECT
--- MAGIC             entity_name,
--- MAGIC             target_catalog_name,
--- MAGIC             target_schema_name,
--- MAGIC             target_table_name,
--- MAGIC             source_query,
--- MAGIC             load_strategy,
--- MAGIC             business_key_columns,
--- MAGIC             hash_columns,
--- MAGIC             effective_timestamp_column,
--- MAGIC             is_scd2,
--- MAGIC             load_enabled,
--- MAGIC             load_sequence
--- MAGIC         FROM {catalog_name}.config.silver_conformance_entity_config
--- MAGIC         WHERE lower(entity_name) = lower('{escape_sql(entity_name)}')
--- MAGIC           AND load_enabled = true
--- MAGIC     """).collect()
--- MAGIC
--- MAGIC     if not rows:
--- MAGIC         raise ValueError(f"No active Silver Conformance config found for entity_name={entity_name}")
--- MAGIC
--- MAGIC     return row.asDict() for row in rows
--- MAGIC
--- MAGIC get_silver_conformance_entity_config(spark,'credit_risk_dev','customer_scd2')
+SELECT
+    'customer_scd2',
+    'credit_risk_dev',
+    'silver',
+    'conformed_customer_scd2',
+    '
+    SELECT DISTINCT
+        customer_id,
+        gender,
+        own_car_flag,
+        own_realty_flag,
+        children_count,
+        family_members_count,
+        income_total,
+        income_type,
+        education_type,
+        family_status,
+        housing_type,
+        occupation_type,
+        organization_type,
+        days_birth,
+        days_employed,
+        region_population_relative,
+        source_system,
+        pipeline_run_id,
+        standardization_timestamp
+    FROM (
+        SELECT
+            sk_id_curr AS customer_id,
+            code_gender AS gender,
+            flag_own_car AS own_car_flag,
+            flag_own_realty AS own_realty_flag,
+            cnt_children AS children_count,
+            cnt_fam_members AS family_members_count,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            organization_type,
+            days_birth,
+            days_employed,
+            region_population_relative,
+            CAST(''train'' as STRING) AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_train
+        WHERE sk_id_curr IS NOT NULL
+
+        UNION ALL
+
+        SELECT
+            sk_id_curr AS customer_id,
+            code_gender AS gender,
+            flag_own_car AS own_car_flag,
+            flag_own_realty AS own_realty_flag,
+            cnt_children AS children_count,
+            cnt_fam_members AS family_members_count,
+            amt_income_total AS income_total,
+            name_income_type AS income_type,
+            name_education_type AS education_type,
+            name_family_status AS family_status,
+            name_housing_type AS housing_type,
+            occupation_type,
+            organization_type,
+            days_birth,
+            days_employed,
+            region_population_relative,
+            CAST(''test'' as STRING) AS source_system,
+            pipeline_run_id,
+            standardization_timestamp
+        FROM credit_risk_dev.silver.standardized_application_test
+        WHERE sk_id_curr IS NOT NULL
+    )
+    WHERE customer_id IS NOT NULL
+    ',
+    'SCD2',
+    array('customer_id'),
+    array('gender','own_car_flag','own_realty_flag','children_count','family_members_count','income_total','income_type','education_type','family_status','housing_type','occupation_type','organization_type','days_birth','days_employed','region_population_relative'),
+    'standardization_timestamp',
+    true,
+    true,
+    1,
+    current_timestamp(),
+    current_timestamp()
+
+-- COMMAND ----------
+
+''test''
