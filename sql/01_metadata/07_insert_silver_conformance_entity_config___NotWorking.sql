@@ -3,6 +3,13 @@
 -- Purpose     : Insert metadata for Silver Conformance entities
 -- =====================================================================
 
+
+-- =====================================================================
+-- Cannot use this as CAST(''test'' as STRING) AS source_system, is not taking as a sting if i directly insert into table like this, so we have to use instead a python file with List of Rows() which need to be craated as a dataframe and that dataframe has to write into the table
+-- =====================================================================
+
+
+
 DELETE FROM credit_risk_dev.config.silver_conformance_entity_config;
 
 INSERT INTO credit_risk_dev.config.silver_conformance_entity_config
@@ -50,7 +57,7 @@ SELECT
             days_birth,
             days_employed,
             region_population_relative,
-            ''train'' AS source_system,
+            CAST(''train'' as STRING) AS source_system,
             pipeline_run_id,
             standardization_timestamp
         FROM credit_risk_dev.silver.standardized_application_train
@@ -75,7 +82,7 @@ SELECT
             days_birth,
             days_employed,
             region_population_relative,
-            ''test'' AS source_system,
+            CAST(''test'' as STRING) AS source_system,
             pipeline_run_id,
             standardization_timestamp
         FROM credit_risk_dev.silver.standardized_application_test
@@ -124,7 +131,7 @@ SELECT
     FROM (
         SELECT
             sk_id_curr AS customer_id,
-            ''train'' AS application_source,
+            CAST(''train'' as STRING) AS application_source,
             target,
             name_contract_type AS contract_type,
             amt_credit AS credit_amount,
@@ -140,7 +147,7 @@ SELECT
             days_employed,
             days_registration,
             days_id_publish,
-            ''train'' AS source_system,
+            CAST(''train'' as STRING) AS source_system,
             pipeline_run_id,
             standardization_timestamp
         FROM credit_risk_dev.silver.standardized_application_train
@@ -150,7 +157,7 @@ SELECT
 
         SELECT
             sk_id_curr AS customer_id,
-            ''test'' AS application_source,
+            CAST(''test'' as STRING) AS application_source,
             CAST(NULL AS INT) AS target,
             name_contract_type AS contract_type,
             amt_credit AS credit_amount,
@@ -166,7 +173,7 @@ SELECT
             days_employed,
             days_registration,
             days_id_publish,
-            ''test'' AS source_system,
+            CAST(''test'' as STRING) AS source_system,
             pipeline_run_id,
             standardization_timestamp
         FROM credit_risk_dev.silver.standardized_application_test
