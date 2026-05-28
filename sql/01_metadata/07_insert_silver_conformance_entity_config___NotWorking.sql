@@ -4,6 +4,12 @@
 -- =====================================================================
 
 
+-- =====================================================================
+-- Cannot use this as CAST(''test'' as STRING) AS source_system, is not taking as a sting if i directly insert into table like this, so we have to use instead a python file with List of Rows() which need to be craated as a dataframe and that dataframe has to write into the table
+-- =====================================================================
+
+
+
 DELETE FROM credit_risk_dev.config.silver_conformance_entity_config;
 
 INSERT INTO credit_risk_dev.config.silver_conformance_entity_config

@@ -66,3 +66,17 @@ USING DELTA
 PARTITIONED BY (created_date)
 COMMENT 'Rejected and quarantined records from DQ validation failures'
 ;
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.dq.data_quality_results
+ADD COLUMNS (
+    business_dt DATE COMMENT 'Business/snapshot date for the DQ validation run'
+);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.dq.rejected_records
+ADD COLUMNS (
+    business_dt DATE COMMENT 'Business/snapshot date for the rejected record'
+);
