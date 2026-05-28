@@ -31,7 +31,7 @@ def apply_derived_columns(df: DataFrame, derived_config: List[Dict]) -> DataFram
 #=========================================================================
 # Add common technical metadata and record_hash.
 #=========================================================================
-def add_conformance_metadata(df: DataFrame, entity_config: Dict, pipeline_run_id: str) -> DataFrame:
+def add_conformance_metadata(df: DataFrame, entity_config: Dict, pipeline_run_id: str, business_dt: str) -> DataFrame:
 
     output_df = df
 
@@ -79,17 +79,11 @@ def deduplicate_by_business_keys(df: DataFrame, business_keys: List[str]) -> Dat
 #=========================================================================
 # Build a conformed DataFrame using metadata.
 #=========================================================================
-def build_conformed_dataframe(
-    spark,
-    entity_config: Dict,
-    derived_config: List[Dict],
-    pipeline_run_id: str,
-    business_dt: str
-) -> DataFrame:
+def build_conformed_dataframe(spark, entity_config: Dict, derived_config: List[Dict], pipeline_run_id: str, business_dt: str ) -> DataFrame:
 
     source_df = build_source_dataframe(spark, entity_config)
     derived_df = apply_derived_columns(source_df, derived_config)
-    metadata_df = add_conformance_metadata(derived_df, entity_config, pipeline_run_id)
+    metadata_df = add_conformance_metadata(derived_df, entity_config, pipeline_run_id, business_dt)
 
     business_keys = entity_config.get("business_key_columns") or []
     return deduplicate_by_business_keys(metadata_df, business_keys)

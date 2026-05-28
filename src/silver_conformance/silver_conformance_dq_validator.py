@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from functools import reduce
 
 from pyspark.sql import DataFrame
@@ -6,14 +6,19 @@ from pyspark.sql import functions as F
 from src.utils.sql_utils import escape_sql
 
 #=========================================================================
+# Ensure business_dt exists in the working DataFrame when a value is supplied.
+#=========================================================================
+
+def _add_business_dt_if_missing(df: DataFrame, business_dt: Optional[str]) -> DataFrame:
+
+    if business_dt and "business_dt" not in df.columns:
+        return df.withColumn("business_dt", F.to_date(F.lit(business_dt)))
+    return df
+
+#=========================================================================
 # Read active DQ rules from existing dq.data_quality_rules.
 #=========================================================================
-def read_active_conformance_dq_rules(
-    spark,
-    catalog_name: str,
-    target_schema_name: str,
-    target_table_name: str
-) -> List[Dict]:
+def read_active_conformance_dq_rules(spark, catalog_name: str, target_schema_name: str, target_table_name: str ) -> List[Dict]:
     
     rows = spark.sql(f"""
         SELECT
@@ -58,8 +63,33 @@ def _empty_rejected_df(df: DataFrame) -> DataFrame:
     )
 
 #=========================================================================
+# Align a DataFrame to an existing target Delta table schema before append.
+# This avoids append failures when the target table has optional columns such as business_dt
+# or when older DQ tables do not yet include newer columns.
+#=========================================================================
+def _align_to_target_table_schema(df: DataFrame, target_table_full_name: str ) -> DataFrame:
+
+    spark = df.sparkSession
+    target_schema = spark.table(target_table_full_name).schema
+
+    output_df = df
+
+    for field in target_schema:
+        if field.name not in output_df.columns:
+            output_df = output_df.withColumn(field.name, F.lit(None).cast(field.dataType))
+
+    return output_df.select(
+        *[
+            F.col(field.name).cast(field.dataType).alias(field.name)
+            for field in target_schema
+        ]
+    )
+
+
+#=========================================================================
 # Apply metadata-driven business DQ rules.
 # rule_sql_expression must return TRUE for failed records.
+# business_dt is optional for backward compatibility
 #=========================================================================
 def apply_conformance_dq_rules(
     df: DataFrame,
@@ -67,14 +97,18 @@ def apply_conformance_dq_rules(
     catalog_name: str,
     target_schema_name: str,
     target_table_name: str,
-    pipeline_run_id: str
+    pipeline_run_id: str,
+    business_dt: Optional[str] = None
 ) -> Tuple[DataFrame, DataFrame, List[Dict]]:
 
+    df = _add_business_dt_if_missing(df, business_dt)
 
     if not dq_rules:
         return df, _empty_rejected_df(df), []
 
+    df = df.persist()
     total_count = df.count()
+
     failed_conditions = []
     rejected_dfs = []
     result_rows = []
@@ -87,6 +121,7 @@ def apply_conformance_dq_rules(
         failed_count = failed_df.count()
 
         result_rows.append({
+            "business_dt": business_dt,
             "rule_id": rule["rule_id"],
             "rule_name": rule["rule_name"],
             "rule_type": rule["rule_type"],
@@ -124,21 +159,28 @@ def apply_conformance_dq_rules(
     else:
         rejected_df = _empty_rejected_df(df)
 
+    rejected_df = _add_business_dt_if_missing(rejected_df, business_dt)
+
+    df.unpersist()
     return valid_df, rejected_df, result_rows
 
 #=========================================================================
 # Write rejected rows to existing dq.rejected_records table.
 #=========================================================================
-def write_conformance_rejected_records(rejected_df: DataFrame, catalog_name: str) -> int:
-    rejected_df = rejected_df.persist()
+def write_conformance_rejected_records( rejected_df: DataFrame, catalog_name: str, business_dt: Optional[str] = None ) -> int:
+
+    target_table_full_name = f"{catalog_name}.dq.rejected_records"
+
+    rejected_df = _add_business_dt_if_missing(rejected_df, business_dt).persist()
     rejected_count = rejected_df.count()
 
     if rejected_count > 0:
+        output_df = _align_to_target_table_schema(rejected_df, target_table_full_name)
         (
-            rejected_df.write
+            output_df.write
             .format("delta")
             .mode("append")
-            .saveAsTable(f"{catalog_name}.dq.rejected_records")
+            .saveAsTable(target_table_full_name)
         )
 
     rejected_df.unpersist()
@@ -152,8 +194,12 @@ def write_conformance_dq_results(
     catalog_name: str,
     pipeline_run_id: str,
     table_name: str,
-    rule_results: List[Dict]
+    rule_results: List[Dict],
+    business_dt: Optional[str] = None
 ) -> None:
+
+    target_table_full_name = f"{catalog_name}.dq.data_quality_results"
+    target_columns = set(spark.table(target_table_full_name).columns)
 
     for result in rule_results:
         total_count = result["total_record_count"]
@@ -162,37 +208,76 @@ def write_conformance_dq_results(
         failed_percentage = 0 if total_count == 0 else round((failed_count / total_count) * 100, 4)
         status = "PASSED" if failed_count == 0 else "FAILED"
 
-        spark.sql(f"""
-            INSERT INTO {catalog_name}.dq.data_quality_results
-            (
-                dq_result_id,
-                pipeline_run_id,
-                rule_id,
-                table_name,
-                rule_name,
-                rule_type,
-                failed_record_count,
-                total_record_count,
-                passed_record_count,
-                failed_percentage,
-                status,
-                severity,
-                checked_timestamp,
-                checked_date
-            )
-            SELECT
-                uuid(),
-                '{escape_sql(pipeline_run_id)}',
-                '{escape_sql(result["rule_id"])}',
-                '{escape_sql(table_name)}',
-                '{escape_sql(result["rule_name"])}',
-                '{escape_sql(result["rule_type"])}',
-                CAST({failed_count} AS BIGINT),
-                CAST({total_count} AS BIGINT),
-                CAST({passed_count} AS BIGINT),
-                CAST({failed_percentage} AS DECIMAL(10,4)),
-                '{escape_sql(status)}',
-                '{escape_sql(result["severity"])}',
-                current_timestamp(),
-                current_date()
-        """)
+        if "business_dt" in target_columns:
+            spark.sql(f"""
+                INSERT INTO {target_table_full_name}
+                (
+                    dq_result_id,
+                    pipeline_run_id,
+                    business_dt,
+                    rule_id,
+                    table_name,
+                    rule_name,
+                    rule_type,
+                    failed_record_count,
+                    total_record_count,
+                    passed_record_count,
+                    failed_percentage,
+                    status,
+                    severity,
+                    checked_timestamp,
+                    checked_date
+                )
+                SELECT
+                    uuid(),
+                    '{escape_sql(pipeline_run_id)}',
+                    to_date('{escape_sql(business_dt or result.get("business_dt") or "")}'),
+                    '{escape_sql(result["rule_id"])}',
+                    '{escape_sql(table_name)}',
+                    '{escape_sql(result["rule_name"])}',
+                    '{escape_sql(result["rule_type"])}',
+                    CAST({failed_count} AS BIGINT),
+                    CAST({total_count} AS BIGINT),
+                    CAST({passed_count} AS BIGINT),
+                    CAST({failed_percentage} AS DECIMAL(10,4)),
+                    '{escape_sql(status)}',
+                    '{escape_sql(result["severity"])}',
+                    current_timestamp(),
+                    current_date()
+            """)
+        else:
+            spark.sql(f"""
+                INSERT INTO {target_table_full_name}
+                (
+                    dq_result_id,
+                    pipeline_run_id,
+                    rule_id,
+                    table_name,
+                    rule_name,
+                    rule_type,
+                    failed_record_count,
+                    total_record_count,
+                    passed_record_count,
+                    failed_percentage,
+                    status,
+                    severity,
+                    checked_timestamp,
+                    checked_date
+                )
+                SELECT
+                    uuid(),
+                    '{escape_sql(pipeline_run_id)}',
+                    '{escape_sql(result["rule_id"])}',
+                    '{escape_sql(table_name)}',
+                    '{escape_sql(result["rule_name"])}',
+                    '{escape_sql(result["rule_type"])}',
+                    CAST({failed_count} AS BIGINT),
+                    CAST({total_count} AS BIGINT),
+                    CAST({passed_count} AS BIGINT),
+                    CAST({failed_percentage} AS DECIMAL(10,4)),
+                    '{escape_sql(status)}',
+                    '{escape_sql(result["severity"])}',
+                    current_timestamp(),
+                    current_date()
+            """)
+

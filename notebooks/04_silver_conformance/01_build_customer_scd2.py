@@ -123,6 +123,8 @@ try:
         target_schema_name=target_schema_name,
         target_table_name=target_table_name
     )
+    
+    log_step(logger, f"Available dq_rules for the entity_name={entity_name} are {[rule['rule_sql_expression'] for rule in dq_rules]}")
 
     log_step(logger, f"Applying Silver Conformance dq rules | entity_name={entity_name}")
     valid_df, rejected_df, dq_results = apply_conformance_dq_rules(
