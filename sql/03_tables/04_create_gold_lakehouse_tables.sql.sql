@@ -5,322 +5,242 @@
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.customer_credit_risk_profile (
-  customer_id BIGINT,
-  total_bureau_credits INT,
-  active_bureau_credits INT,
-  closed_bureau_credits INT,
-  max_credit_overdue DECIMAL(18,2),
-  avg_credit_duration DOUBLE,
-  previous_application_count INT,
-  approved_previous_application_count INT,
-  refused_previous_application_count INT,
-  avg_installment_delay_days DOUBLE,
-  max_installment_delay_days INT,
-  total_late_payments INT,
-  credit_card_utilization_ratio DOUBLE,
-  risk_band STRING,
-  profile_created_timestamp TIMESTAMP,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.loan_default_feature_store (
-  customer_id BIGINT,
-  target INT,
-  application_amount DECIMAL(18,2),
-  credit_amount DECIMAL(18,2),
-  annuity_amount DECIMAL(18,2),
-  income_amount DECIMAL(18,2),
-  contract_type STRING,
-  education_type STRING,
-  family_status STRING,
-  housing_type STRING,
-  employment_days INT,
-  age_years DOUBLE,
-  income_credit_ratio DOUBLE,
-  annuity_income_ratio DOUBLE,
-  total_previous_bureau_credits INT,
-  active_bureau_credit_count INT,
-  closed_bureau_credit_count INT,
-  total_previous_credit_amount DECIMAL(18,2),
-  avg_previous_credit_amount DECIMAL(18,2),
-  max_days_credit_overdue INT,
-  total_previous_home_credit_applications INT,
-  approved_previous_application_count INT,
-  refused_previous_application_count INT,
-  avg_installment_delay_days DOUBLE,
-  max_installment_delay_days INT,
-  total_paid_amount DECIMAL(18,2),
-  credit_card_utilization_ratio DOUBLE,
-  pos_cash_late_payment_count INT,
-  bureau_months_observed INT,
-  feature_created_timestamp TIMESTAMP,
-  feature_version STRING,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.credit_behavior_summary (
-  customer_id BIGINT,
-  bureau_credit_count INT,
-  active_credit_count INT,
-  closed_credit_count INT,
-  total_credit_amount DECIMAL(18,2),
-  total_credit_debt_amount DECIMAL(18,2),
-  total_credit_overdue_amount DECIMAL(18,2),
-  max_days_credit_overdue INT,
-  credit_types_count INT,
-  bureau_months_observed INT,
-  bad_status_month_count INT,
-  summary_created_timestamp TIMESTAMP,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.repayment_performance_summary (
-  customer_id BIGINT,
-  previous_application_count INT,
-  installment_count INT,
-  total_instalment_amount DECIMAL(18,2),
-  total_paid_amount DECIMAL(18,2),
-  avg_payment_delay_days DOUBLE,
-  max_payment_delay_days INT,
-  late_payment_count INT,
-  payment_shortfall_amount DECIMAL(18,2),
-  pos_cash_late_payment_count INT,
-  summary_created_timestamp TIMESTAMP,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.application_risk_dashboard (
-  customer_id BIGINT,
-  target INT,
-  contract_type STRING,
-  education_type STRING,
-  family_status STRING,
-  housing_type STRING,
-  income_amount DECIMAL(18,2),
-  credit_amount DECIMAL(18,2),
-  annuity_amount DECIMAL(18,2),
-  income_credit_ratio DOUBLE,
-  annuity_income_ratio DOUBLE,
-  risk_band STRING,
-  active_bureau_credit_count INT,
-  refused_previous_application_count INT,
-  avg_installment_delay_days DOUBLE,
-  credit_card_utilization_ratio DOUBLE,
-  dashboard_created_timestamp TIMESTAMP,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
 CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_customer (
-  customer_key BIGINT,
-  customer_id BIGINT,
-  gender STRING,
-  age_years DOUBLE,
-  income_type STRING,
-  education_type STRING,
-  family_status STRING,
-  housing_type STRING,
-  occupation_type STRING,
-  organization_type STRING,
-  own_car_flag STRING,
-  own_realty_flag STRING,
-  effective_start_date DATE,
-  effective_end_date DATE,
-  is_current BOOLEAN
-)
-USING DELTA;
+    customer_dim_key BIGINT GENERATED ALWAYS AS IDENTITY,
+    customer_id BIGINT,
+    application_source STRING,
+    gender STRING,
+    own_car_flag STRING,
+    own_realty_flag STRING,
+    children_count INT,
+    family_members_count DECIMAL(10,2),
+    income_total DECIMAL(18,2),
+    income_type STRING,
+    education_type STRING,
+    family_status STRING,
+    housing_type STRING,
+    occupation_type STRING,
+    organization_type STRING,
+    age_years DECIMAL(10,2),
+    employment_years DECIMAL(10,2),
+    region_population_relative DECIMAL(18,8),
+    scd_effective_from TIMESTAMP,
+    scd_effective_to TIMESTAMP,
+    is_current BOOLEAN,
+    business_dt DATE,
+    source_system STRING,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold customer dimension'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_contract (
-  contract_key BIGINT,
-  contract_type STRING,
-  payment_type STRING,
-  contract_status STRING,
-  yield_group STRING,
-  product_combination STRING
-)
-USING DELTA;
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_loan_application (
+    loan_application_dim_key BIGINT GENERATED ALWAYS AS IDENTITY,
+    customer_id BIGINT,
+    application_source STRING,
+    target INT,
+    contract_type STRING,
+    income_type STRING,
+    education_type STRING,
+    family_status STRING,
+    housing_type STRING,
+    occupation_type STRING,
+    credit_amount DECIMAL(18,2),
+    annuity_amount DECIMAL(18,2),
+    goods_price DECIMAL(18,2),
+    income_total DECIMAL(18,2),
+    age_years DECIMAL(10,2),
+    employment_years DECIMAL(10,2),
+    credit_income_ratio DECIMAL(18,6),
+    annuity_income_ratio DECIMAL(18,6),
+    business_dt DATE,
+    source_system STRING,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold loan application dimension'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_credit_status (
-  credit_status_key BIGINT,
-  credit_active_status STRING,
-  bureau_balance_status STRING,
-  is_active_credit BOOLEAN,
-  is_delinquent BOOLEAN,
-  is_bad_status BOOLEAN
-)
-USING DELTA;
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_bureau_credit (
+    bureau_credit_dim_key BIGINT GENERATED ALWAYS AS IDENTITY,
+    bureau_credit_id BIGINT,
+    customer_id BIGINT,
+    credit_active STRING,
+    credit_currency STRING,
+    credit_type STRING,
+    is_active_credit BOOLEAN,
+    is_closed_credit BOOLEAN,
+    has_overdue BOOLEAN,
+    business_dt DATE,
+    source_system STRING,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold bureau credit dimension'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_product (
-  product_key BIGINT,
-  product_type STRING,
-  portfolio_name STRING,
-  goods_category STRING,
-  cash_loan_purpose STRING,
-  seller_industry STRING
-)
-USING DELTA;
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_credit_application (
+    customer_dim_key BIGINT,
+    loan_application_dim_key BIGINT,
+    customer_id BIGINT,
+    application_source STRING,
+    application_count BIGINT,
+    default_flag INT,
+    credit_amount DECIMAL(18,2),
+    annuity_amount DECIMAL(18,2),
+    goods_price DECIMAL(18,2),
+    income_total DECIMAL(18,2),
+    credit_income_ratio DECIMAL(18,6),
+    annuity_income_ratio DECIMAL(18,6),
+    high_credit_income_flag BOOLEAN,
+    high_annuity_income_flag BOOLEAN,
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold fact for loan application credit risk analysis'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_calendar (
-  calendar_key INT,
-  calendar_date DATE,
-  year_number INT,
-  quarter_number INT,
-  month_number INT,
-  month_name STRING,
-  day_of_month INT,
-  day_of_week INT,
-  weekday_name STRING,
-  is_weekend BOOLEAN
-)
-USING DELTA;
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_bureau_credit_exposure (
+    customer_dim_key BIGINT,
+    bureau_credit_dim_key BIGINT,
+    bureau_credit_id BIGINT,
+    customer_id BIGINT,
+    bureau_credit_count BIGINT,
+    credit_amount DECIMAL(18,2),
+    credit_debt_amount DECIMAL(18,2),
+    credit_limit_amount DECIMAL(18,2),
+    credit_overdue_amount DECIMAL(18,2),
+    annuity_amount DECIMAL(18,2),
+    debt_to_credit_ratio DECIMAL(18,6),
+    has_overdue BOOLEAN,
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold fact for external bureau credit exposure'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.dim_channel (
-  channel_key BIGINT,
-  channel_type STRING,
-  sellerplace_area INT,
-  organization_type STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_loan_application (
-  customer_id BIGINT,
-  customer_key BIGINT,
-  contract_key BIGINT,
-  calendar_key INT,
-  target INT,
-  income_amount DECIMAL(18,2),
-  credit_amount DECIMAL(18,2),
-  annuity_amount DECIMAL(18,2),
-  goods_price_amount DECIMAL(18,2),
-  income_credit_ratio DOUBLE,
-  annuity_income_ratio DOUBLE,
-  application_count INT,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_bureau_credit (
-  customer_id BIGINT,
-  bureau_credit_id BIGINT,
-  customer_key BIGINT,
-  credit_status_key BIGINT,
-  credit_type STRING,
-  credit_sum_amount DECIMAL(18,2),
-  credit_sum_debt_amount DECIMAL(18,2),
-  credit_sum_limit_amount DECIMAL(18,2),
-  credit_sum_overdue_amount DECIMAL(18,2),
-  credit_day_overdue INT,
-  days_credit INT,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_bureau_monthly_balance (
-  bureau_credit_id BIGINT,
-  months_balance INT,
-  credit_status_key BIGINT,
-  status STRING,
-  is_delinquent BOOLEAN,
-  is_bad_status BOOLEAN,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_previous_application (
-  previous_application_id BIGINT,
-  customer_id BIGINT,
-  customer_key BIGINT,
-  contract_key BIGINT,
-  product_key BIGINT,
-  channel_key BIGINT,
-  application_amount DECIMAL(18,2),
-  credit_amount DECIMAL(18,2),
-  annuity_amount DECIMAL(18,2),
-  down_payment_amount DECIMAL(18,2),
-  is_approved BOOLEAN,
-  is_refused BOOLEAN,
-  days_decision INT,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_pos_cash_monthly_balance (
-  previous_application_id BIGINT,
-  customer_id BIGINT,
-  months_balance INT,
-  installment_count INT,
-  future_installment_count INT,
-  days_past_due INT,
-  days_past_due_def INT,
-  is_late_payment BOOLEAN,
-  pipeline_run_id STRING
-)
-USING DELTA;
-
--- COMMAND ----------
-
-CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_credit_card_monthly_balance (
-  previous_application_id BIGINT,
-  customer_id BIGINT,
-  months_balance INT,
-  balance_amount DECIMAL(18,2),
-  credit_limit_actual_amount DECIMAL(18,2),
-  payment_total_current_amount DECIMAL(18,2),
-  total_receivable_amount DECIMAL(18,2),
-  drawings_current_count INT,
-  credit_card_utilization_ratio DOUBLE,
-  days_past_due INT,
-  pipeline_run_id STRING
-)
-USING DELTA;
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_credit_card_balance_monthly (
+    customer_dim_key BIGINT,
+    customer_id BIGINT,
+    previous_application_id BIGINT,
+    months_balance INT,
+    balance_amount DECIMAL(18,2),
+    credit_limit_actual DECIMAL(18,2),
+    drawing_amount_current DECIMAL(18,2),
+    payment_amount_current DECIMAL(18,2),
+    payment_total_current DECIMAL(18,2),
+    receivable_total_amount DECIMAL(18,2),
+    days_past_due INT,
+    days_past_due_def INT,
+    credit_utilization_ratio DECIMAL(18,6),
+    has_dpd BOOLEAN,
+    has_default_dpd BOOLEAN,
+    is_active_contract BOOLEAN,
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold fact for monthly credit card balances'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
 
 -- COMMAND ----------
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_installment_payment (
-  previous_application_id BIGINT,
-  customer_id BIGINT,
-  installment_number INT,
-  days_instalment INT,
-  days_entry_payment INT,
-  instalment_amount DECIMAL(18,2),
-  payment_amount DECIMAL(18,2),
-  payment_delay_days INT,
-  is_late_payment BOOLEAN,
-  pipeline_run_id STRING
-)
-USING DELTA;
+    customer_dim_key BIGINT,
+    customer_id BIGINT,
+    previous_application_id BIGINT,
+    installment_version INT,
+    installment_number INT,
+    installment_amount DECIMAL(18,2),
+    payment_amount DECIMAL(18,2),
+    payment_delay_days INT,
+    payment_amount_diff DECIMAL(18,2),
+    is_late_payment BOOLEAN,
+    is_underpayment BOOLEAN,
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold fact for installment repayment behaviour'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_pos_cash_balance_monthly (
+    customer_dim_key BIGINT,
+    customer_id BIGINT,
+    previous_application_id BIGINT,
+    months_balance INT,
+    installment_future_count INT,
+    installment_count INT,
+    days_past_due INT,
+    days_past_due_def INT,
+    has_dpd BOOLEAN,
+    has_default_dpd BOOLEAN,
+    is_active_contract BOOLEAN,
+    remaining_installment_ratio DECIMAL(18,6),
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Gold fact for monthly POS/cash balances'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');
+
+-- COMMAND ----------
+
+CREATE TABLE IF NOT EXISTS credit_risk_dev.gold.fact_customer_risk_snapshot (
+    customer_dim_key BIGINT,
+    customer_id BIGINT,
+    application_source STRING,
+    application_count BIGINT,
+    default_flag INT,
+    total_credit_amount DECIMAL(18,2),
+    total_annuity_amount DECIMAL(18,2),
+    total_income_amount DECIMAL(18,2),
+    avg_credit_income_ratio DECIMAL(18,6),
+    avg_annuity_income_ratio DECIMAL(18,6),
+    bureau_credit_count BIGINT,
+    active_bureau_credit_count BIGINT,
+    total_bureau_credit_amount DECIMAL(18,2),
+    total_bureau_debt_amount DECIMAL(18,2),
+    total_bureau_overdue_amount DECIMAL(18,2),
+    credit_card_balance_amount DECIMAL(18,2),
+    credit_card_limit_amount DECIMAL(18,2),
+    max_credit_card_dpd INT,
+    installment_count BIGINT,
+    late_installment_count BIGINT,
+    underpayment_count BIGINT,
+    total_installment_amount DECIMAL(18,2),
+    total_payment_amount DECIMAL(18,2),
+    pos_contract_count BIGINT,
+    max_pos_dpd INT,
+    active_pos_contract_count BIGINT,
+    risk_segment STRING,
+    business_dt DATE,
+    pipeline_run_id STRING,
+    gold_created_timestamp TIMESTAMP,
+    gold_created_date DATE
+) USING DELTA PARTITIONED BY (business_dt)
+COMMENT 'Power BI friendly customer-level credit risk snapshot'
+TBLPROPERTIES ('delta.autoOptimize.optimizeWrite'='true','delta.autoOptimize.autoCompact'='true');

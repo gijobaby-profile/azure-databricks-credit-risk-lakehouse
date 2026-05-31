@@ -113,6 +113,8 @@ try:
         business_dt=business_dt
     )
 
+    #display(source_df.columns)
+    
     target_schema_name = entity_config["target_schema_name"]
     target_table_name = entity_config["target_table_name"]
 
@@ -190,4 +192,9 @@ except Exception as error:
 
     close_logger(logger)
     raise
+
+
+# COMMAND ----------
+
+display(dq_results)
 
