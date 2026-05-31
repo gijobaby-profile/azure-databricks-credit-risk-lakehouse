@@ -5,9 +5,12 @@
 
 -- COMMAND ----------
 
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_customer_scd2;
+
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_customer_scd2 (
     customer_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for customer version',
     customer_id BIGINT COMMENT 'Business customer identifier',
+    application_source STRING COMMENT 'Source dataset indicator: train or test',
 
     gender STRING COMMENT 'Customer gender',
     own_car_flag STRING COMMENT 'Car ownership flag',
@@ -37,11 +40,11 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_customer_scd2 (
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
     updated_timestamp TIMESTAMP COMMENT 'Record update timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed customer SCD2 entity for historical customer attribute tracking'
+COMMENT 'Silver Conformed customer SCD2 entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
@@ -49,23 +52,25 @@ TBLPROPERTIES (
 
 -- COMMAND ----------
 
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_loan_application;
+
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_loan_application (
     loan_application_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for loan application',
     customer_id BIGINT COMMENT 'Customer identifier',
-    application_source STRING COMMENT 'Source dataset: train or test',
+    application_source STRING COMMENT 'Source dataset indicator: train or test',
 
-    target INT COMMENT 'Default indicator for train dataset; null for test dataset',
+    target INT COMMENT 'Default target for train records; null for test records',
     contract_type STRING COMMENT 'Loan contract type',
     credit_amount DECIMAL(18,2) COMMENT 'Requested credit amount',
     annuity_amount DECIMAL(18,2) COMMENT 'Loan annuity amount',
     goods_price DECIMAL(18,2) COMMENT 'Goods price',
     income_total DECIMAL(18,2) COMMENT 'Customer income at application time',
 
-    income_type STRING COMMENT 'Income type at application time',
-    education_type STRING COMMENT 'Education type at application time',
-    family_status STRING COMMENT 'Family status at application time',
-    housing_type STRING COMMENT 'Housing type at application time',
-    occupation_type STRING COMMENT 'Occupation type at application time',
+    income_type STRING COMMENT 'Income type',
+    education_type STRING COMMENT 'Education type',
+    family_status STRING COMMENT 'Family status',
+    housing_type STRING COMMENT 'Housing type',
+    occupation_type STRING COMMENT 'Occupation type',
 
     days_birth INT COMMENT 'Customer age in relative days',
     days_employed INT COMMENT 'Employment duration in relative days',
@@ -83,17 +88,19 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_loan_application (
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
     updated_timestamp TIMESTAMP COMMENT 'Record update timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed loan application entity combining train and test standardized application data'
+COMMENT 'Silver Conformed loan application entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
 
 -- COMMAND ----------
+
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_bureau_credit;
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_bureau_credit (
     bureau_credit_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for bureau credit',
@@ -125,17 +132,19 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_bureau_credit (
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
     updated_timestamp TIMESTAMP COMMENT 'Record update timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed external bureau credit entity for customer credit history analysis'
+COMMENT 'Silver Conformed external bureau credit entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
 
 -- COMMAND ----------
+
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_previous_application;
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_previous_application (
     previous_application_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for previous application',
@@ -178,17 +187,19 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_previous_application
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
     updated_timestamp TIMESTAMP COMMENT 'Record update timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed previous application entity for historical credit application behavior analysis'
+COMMENT 'Silver Conformed previous application entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
 
 -- COMMAND ----------
+
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_credit_card_balance;
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_credit_card_balance (
     credit_card_balance_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for credit card balance',
@@ -220,17 +231,19 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_credit_card_balance 
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed credit card balance entity for utilization and delinquency analysis'
+COMMENT 'Silver Conformed credit card balance entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
 
 -- COMMAND ----------
+
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_installment_payment;
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_installment_payment (
     installment_payment_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for installment payment',
@@ -253,17 +266,19 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_installment_payment 
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed installment payment entity for repayment behavior analysis'
+COMMENT 'Silver Conformed installment payment entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
 
 -- COMMAND ----------
+
+DROP TABLE IF EXISTS credit_risk_dev.silver.conformed_pos_cash_balance;
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_pos_cash_balance (
     pos_cash_balance_sk BIGINT GENERATED ALWAYS AS IDENTITY COMMENT 'Surrogate key for POS cash balance',
@@ -286,13 +301,12 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_pos_cash_balance (
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Record creation date'
+    created_date DATE COMMENT 'Technical record creation date'
 )
 USING DELTA
 PARTITIONED BY (business_dt)
-COMMENT 'Silver Conformed POS/cash balance entity for loan lifecycle and delinquency behavior analysis'
+COMMENT 'Silver Conformed POS/cash balance entity'
 TBLPROPERTIES (
     'delta.autoOptimize.optimizeWrite' = 'true',
     'delta.autoOptimize.autoCompact' = 'true'
 );
-

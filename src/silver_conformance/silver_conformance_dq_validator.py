@@ -108,6 +108,7 @@ def apply_conformance_dq_rules(
 
     df = df.persist()
     total_count = df.count()
+    display(f"total_count={total_count}")
 
     failed_conditions = []
     rejected_dfs = []
