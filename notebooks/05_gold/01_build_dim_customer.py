@@ -124,6 +124,8 @@ try:
         f"pipeline_run_id={pipeline_run_id}"
     )
 
+    # To start the logging
+    log_step(logger, f"Starting pipeline audit | pipeline_run_id={pipeline_run_id} | entity_name= gold_{entity_name}")
     start_pipeline(
         spark=spark,
         catalog_name=catalog_name,
@@ -131,6 +133,7 @@ try:
         entity_name=f"gold_{entity_name}"
     )
 
+    log_step(logger, f"Starting table load audit | pipeline_run_id={pipeline_run_id}")
     table_load_id = start_load(
         spark=spark,
         catalog_name=catalog_name,
@@ -138,20 +141,25 @@ try:
         config=config_for_error
     )
 
+    log_step(logger, f"Deleting existing data from {target_table_full_name} for the business_dt = {business_dt}")
     records_deleted = delete_business_dt_partition(
         spark=spark,
         target_table_full_name=target_table_full_name,
         business_dt=business_dt
     )
 
+    log_step(logger, f"Starting data insertion")
     spark.sql(sql_statement)
+    log_step(logger, f"Completed data insertion")
 
     records_written = count_business_dt(
         spark=spark,
         target_table_full_name=target_table_full_name,
         business_dt=business_dt
     )
+    log_step(logger, f"Count of data inserted = {records_written}")
 
+    log_step(logger, f"Ending data loading process")
     end_load_success(
         spark=spark,
         catalog_name=catalog_name,
@@ -159,6 +167,7 @@ try:
         records_written=records_written
     )
 
+    log_step(logger, f"Ending popeline process")
     end_pipeline_success(
         spark=spark,
         catalog_name=catalog_name,
@@ -172,8 +181,7 @@ try:
         f"pipeline_run_id={pipeline_run_id}"
     )
     log_step(logger, message)
-    close_logger(logger)
-    dbutils.notebook.exit(message)
+
 
 except Exception as error:
     logger.exception(f"FAILED | layer=gold | entity={entity_name} | business_dt={business_dt}")
@@ -204,3 +212,24 @@ except Exception as error:
     close_logger(logger)
     raise
 
+finally:
+    close_logger(logger)
+
+dbutils.notebook.exit(message)
+
+# COMMAND ----------
+
+log_dir = f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/pipeline/gold/{entity_name}/"
+
+files = dbutils.fs.ls(log_dir)
+
+latest_file = sorted(files, key=lambda x: x.modificationTime, reverse=True)[0].path
+
+print(f"Latest log file: {latest_file}")
+print(dbutils.fs.head(latest_file, 10000))
+
+# COMMAND ----------
+
+log_path = "/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/gold/dim_customer/2026-06-01/f6054863-ba77-4508-a57f-82a70d462d77.log"
+
+display(spark.read.text(log_path))

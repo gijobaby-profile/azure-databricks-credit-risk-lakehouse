@@ -152,8 +152,7 @@ try:
         f"rejected_records={rejected_count} | pipeline_run_id={pipeline_run_id}"
     )
     log_step(logger, message)
-    close_logger(logger)
-    dbutils.notebook.exit(message)
+
 
 except Exception as error:
     logger.exception(f"FAILED | entity={entity_name} | business_dt={business_dt}")
@@ -174,3 +173,7 @@ except Exception as error:
     close_logger(logger)
     raise
 
+finally:
+    close_logger(logger)
+
+dbutils.notebook.exit(message)
