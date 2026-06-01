@@ -145,8 +145,6 @@ try:
         f"pipeline_run_id={pipeline_run_id}"
     )
     log_step(logger, success_message)
-    close_logger(logger)
-    dbutils.notebook.exit(success_message)
 
 except Exception as error:
     logger.exception(f"Bronze ingestion failed | entity_name={entity_name}")
@@ -163,6 +161,10 @@ except Exception as error:
     close_logger(logger)
     raise
 
+finally:
+    close_logger(logger)
+
+dbutils.notebook.exit(success_message)
 
 # COMMAND ----------
 
