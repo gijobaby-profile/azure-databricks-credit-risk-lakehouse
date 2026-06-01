@@ -170,8 +170,7 @@ try:
         f"pipeline_run_id={pipeline_run_id}"
     )
     log_step(logger, message)
-    close_logger(logger)
-    dbutils.notebook.exit(message)
+
 
 except Exception as error:
     logger.exception("Customer SCD2 load failed")
@@ -193,6 +192,10 @@ except Exception as error:
     close_logger(logger)
     raise
 
+finally:
+    close_logger(logger)
+
+dbutils.notebook.exit(message)
 
 # COMMAND ----------
 
