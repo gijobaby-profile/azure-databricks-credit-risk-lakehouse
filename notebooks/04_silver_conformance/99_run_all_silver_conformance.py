@@ -25,7 +25,7 @@ pipeline_run_id = dbutils.widgets.get("pipeline_run_id").strip() or str(uuid.uui
 
 # Customer SCD2 has dedicated logic.
 customer_result = dbutils.notebook.run(
-    "./01_build_customer_scd2",
+    "./01_silver_conformed_customer_scd2",
     timeout_seconds=0,
     arguments={
         "catalog_name": catalog_name,
@@ -50,7 +50,7 @@ non_scd2_entities = [
 for entity_name in non_scd2_entities:
     print(f"Running generic conformance builder | entity={entity_name} | business_dt={business_dt}")
     result = dbutils.notebook.run(
-        "./02_build_conformed_entity",
+        "./02_generic_silver_conformed_entity",
         timeout_seconds=0,
         arguments={
             "catalog_name": catalog_name,

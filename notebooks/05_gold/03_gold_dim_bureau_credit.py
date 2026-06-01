@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Build dim_customer
+# MAGIC # Build dim_bureau_credit
 
 # COMMAND ----------
 
@@ -44,8 +44,8 @@ pipeline_run_id = build_pipeline_run_id(dbutils.widgets.get("pipeline_run_id"))
 
 # COMMAND ----------
 
-entity_name = "dim_customer"
-target_table_full_name = f"{catalog_name}.gold.dim_customer"
+entity_name = "dim_bureau_credit"
+target_table_full_name = f"{catalog_name}.gold.dim_bureau_credit"
 
 spark.sql(f"USE CATALOG {catalog_name}")
 
@@ -53,14 +53,14 @@ spark.sql(f"USE CATALOG {catalog_name}")
 
 log_file_path = (
     f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/"
-    f"pipeline/gold/dim_customer/{business_dt}/{pipeline_run_id}.log"
+    f"pipeline/gold/dim_bureau_credit/{business_dt}/{pipeline_run_id}.log"
 )
-logger = get_logger(name=f"gold_dim_customer", log_file_path=log_file_path)
+logger = get_logger(name=f"gold_dim_bureau_credit", log_file_path=log_file_path)
 
 config_for_error = {
     "entity_name": entity_name,
     "source_system": "home_credit",
-    "source_path": "silver.conformed_customer_scd2",
+    "source_path": "silver.conformed_bureau_credit",
     "target_table_full_name": target_table_full_name,
 }
 
@@ -75,44 +75,38 @@ sql_statement = f"""
 
 INSERT INTO {target_table_full_name}
 (
-    customer_id, application_source, gender, own_car_flag, own_realty_flag,
-    children_count, family_members_count, income_total, income_type, education_type,
-    family_status, housing_type, occupation_type, organization_type,
-    age_years, employment_years, region_population_relative,
-    scd_effective_from, scd_effective_to, is_current,
-    business_dt, source_system, pipeline_run_id, gold_created_timestamp, gold_created_date
+	bureau_credit_id 
+	, customer_id 
+	, credit_active 
+	, credit_currency 
+	, credit_type 
+	, is_active_credit 
+	, is_closed_credit 
+	, has_overdue 
+	, business_dt 
+	, source_system 
+	, pipeline_run_id 
+	, gold_created_timestamp 
+	, gold_created_date
 )
 SELECT
-    customer_id,
-    application_source,
-    gender,
-    own_car_flag,
-    own_realty_flag,
-    children_count,
-    family_members_count,
-    income_total,
-    income_type,
-    education_type,
-    family_status,
-    housing_type,
-    occupation_type,
-    organization_type,
-    CAST(round(abs(days_birth) / 365.25, 2) AS DECIMAL(10,2)) AS age_years,
-    CAST(CASE WHEN days_employed IS NULL THEN NULL ELSE round(abs(days_employed) / 365.25, 2) END AS DECIMAL(10,2)) AS employment_years,
-    region_population_relative,
-    effective_from AS scd_effective_from,
-    effective_to AS scd_effective_to,
-    is_current,
-    business_dt,
-    source_system,
-    '{escape_sql(pipeline_run_id)}' AS pipeline_run_id,
-    current_timestamp() AS gold_created_timestamp,
-    current_date() AS gold_created_date
+	bureau_credit_id 
+	, customer_id 
+	, credit_active 
+	, credit_currency 
+	, credit_type 
+	, is_active_credit 
+	, is_closed_credit 
+	, has_overdue 
+	, business_dt 
+	, source_system 
+	, '{escape_sql(pipeline_run_id)}' AS pipeline_run_id 
+	, current_timestamp() 
+	, current_date()
 
-FROM {catalog_name}.silver.conformed_customer_scd2
+FROM {catalog_name}.silver.conformed_bureau_credit
 
 WHERE business_dt = DATE('{escape_sql(business_dt)}')
-  AND is_current = true
 """
 
 # COMMAND ----------
@@ -124,6 +118,7 @@ try:
         f"pipeline_run_id={pipeline_run_id}"
     )
 
+
     # To start the logging
     log_step(logger, f"Starting pipeline audit | pipeline_run_id={pipeline_run_id} | entity_name= gold_{entity_name}")
     start_pipeline(
@@ -133,6 +128,7 @@ try:
         entity_name=f"gold_{entity_name}"
     )
 
+
     log_step(logger, f"Starting table load audit | pipeline_run_id={pipeline_run_id}")
     table_load_id = start_load(
         spark=spark,
@@ -140,6 +136,7 @@ try:
         pipeline_run_id=pipeline_run_id,
         config=config_for_error
     )
+
 
     log_step(logger, f"Deleting existing data from {target_table_full_name} for the business_dt = {business_dt}")
     records_deleted = delete_business_dt_partition(
@@ -152,12 +149,14 @@ try:
     spark.sql(sql_statement)
     log_step(logger, f"Completed data insertion")
 
+
     records_written = count_business_dt(
         spark=spark,
         target_table_full_name=target_table_full_name,
         business_dt=business_dt
     )
     log_step(logger, f"Count of data inserted = {records_written}")
+
 
     log_step(logger, f"Ending data loading process")
     end_load_success(
@@ -167,6 +166,7 @@ try:
         records_written=records_written
     )
 
+
     log_step(logger, f"Ending popeline process")
     end_pipeline_success(
         spark=spark,
@@ -175,13 +175,14 @@ try:
         records_written=records_written
     )
 
+
     message = (
         f"SUCCESS | layer=gold | entity={entity_name} | business_dt={business_dt} | "
         f"records_deleted={records_deleted} | records_written={records_written} | "
         f"pipeline_run_id={pipeline_run_id}"
     )
     log_step(logger, message)
-
+    
 
 except Exception as error:
     logger.exception(f"FAILED | layer=gold | entity={entity_name} | business_dt={business_dt}")
@@ -217,19 +218,3 @@ finally:
 
 dbutils.notebook.exit(message)
 
-# COMMAND ----------
-
-log_dir = f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/pipeline/gold/{entity_name}/"
-
-files = dbutils.fs.ls(log_dir)
-
-latest_file = sorted(files, key=lambda x: x.modificationTime, reverse=True)[0].path
-
-print(f"Latest log file: {latest_file}")
-print(dbutils.fs.head(latest_file, 10000))
-
-# COMMAND ----------
-
-log_path = "/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/gold/dim_customer/2026-06-01/f6054863-ba77-4508-a57f-82a70d462d77.log"
-
-display(spark.read.text(log_path))
