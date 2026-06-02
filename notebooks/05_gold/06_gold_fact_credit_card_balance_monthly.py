@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Build fact_bureau_credit_exposure
+# MAGIC # Build fact_credit_card_balance_monthly
 
 # COMMAND ----------
 
@@ -44,8 +44,8 @@ pipeline_run_id = build_pipeline_run_id(dbutils.widgets.get("pipeline_run_id"))
 
 # COMMAND ----------
 
-entity_name = "fact_bureau_credit_exposure"
-target_table_full_name = f"{catalog_name}.gold.fact_bureau_credit_exposure"
+entity_name = "fact_credit_card_balance_monthly"
+target_table_full_name = f"{catalog_name}.gold.fact_credit_card_balance_monthly"
 
 spark.sql(f"USE CATALOG {catalog_name}")
 
@@ -53,19 +53,16 @@ spark.sql(f"USE CATALOG {catalog_name}")
 
 log_file_path = (
     f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/"
-    f"pipeline/gold/fact_bureau_credit_exposure/{business_dt}/{pipeline_run_id}.log"
+    f"pipeline/gold/fact_credit_card_balance_monthly/{business_dt}/{pipeline_run_id}.log"
 )
-logger = get_logger(name=f"gold_fact_bureau_credit_exposure", log_file_path=log_file_path)
+logger = get_logger(name=f"gold_fact_credit_card_balance_monthly", log_file_path=log_file_path)
 
 config_for_error = {
     "entity_name": entity_name,
     "source_system": "home_credit",
-    "source_path": "silver.conformed_bureau_credit + gold.dim_*",
+    "source_path": "silver.conformed_credit_card_balance",
     "target_table_full_name": target_table_full_name,
 }
-
-# COMMAND ----------
-
 table_load_id = None
 
 # COMMAND ----------
@@ -75,17 +72,21 @@ sql_statement = f"""
 INSERT INTO {target_table_full_name}
 (
 	customer_dim_key 
-	, bureau_credit_dim_key 
-	, bureau_credit_id 
 	, customer_id 
-	, bureau_credit_count 
-	, credit_amount 
-	, credit_debt_amount 
-	, credit_limit_amount 
-	, credit_overdue_amount 
-	, annuity_amount 
-	, debt_to_credit_ratio 
-	, has_overdue 
+	, previous_application_id 
+	, months_balance 
+	, balance_amount 
+	, credit_limit_actual 
+	, drawing_amount_current 
+	, payment_amount_current 
+	, payment_total_current 
+	, receivable_total_amount 
+	, days_past_due 
+	, days_past_due_def 
+	, credit_utilization_ratio 
+	, has_dpd 
+	, has_default_dpd 
+	, is_active_contract 
 	, business_dt 
 	, pipeline_run_id 
 	, gold_created_timestamp 
@@ -93,34 +94,33 @@ INSERT INTO {target_table_full_name}
 )
 SELECT
     dc.customer_dim_key,
-    dbc.bureau_credit_dim_key,
-    bc.bureau_credit_id,
-    bc.customer_id,
-    CAST(1 AS BIGINT) AS bureau_credit_count,
-    bc.credit_amount,
-    bc.credit_debt_amount,
-    bc.credit_limit_amount,
-    bc.credit_overdue_amount,
-    bc.annuity_amount,
-    bc.debt_to_credit_ratio,
-    bc.has_overdue,
-    bc.business_dt,
+    ccb.customer_id,
+    ccb.previous_application_id,
+    ccb.months_balance,
+    ccb.balance_amount,
+    ccb.credit_limit_actual,
+    ccb.drawing_amount_current,
+    ccb.payment_amount_current,
+    ccb.payment_total_current,
+    ccb.receivable_total_amount,
+    ccb.days_past_due,
+    ccb.days_past_due_def,
+    ccb.credit_utilization_ratio,
+    ccb.has_dpd,
+    ccb.has_default_dpd,
+    ccb.is_active_contract,
+    ccb.business_dt,
     '{escape_sql(pipeline_run_id)}' AS pipeline_run_id,
     current_timestamp(),
     current_date()
 	
-FROM {catalog_name}.silver.conformed_bureau_credit bc
+FROM {catalog_name}.silver.conformed_credit_card_balance ccb
 
 LEFT JOIN {catalog_name}.gold.dim_customer dc
-    ON bc.customer_id = dc.customer_id
-   AND bc.business_dt = dc.business_dt
+    ON ccb.customer_id = dc.customer_id
+   AND ccb.business_dt = dc.business_dt
    
-LEFT JOIN {catalog_name}.gold.dim_bureau_credit dbc
-    ON bc.bureau_credit_id = dbc.bureau_credit_id
-   AND bc.customer_id = dbc.customer_id
-   AND bc.business_dt = dbc.business_dt
-   
-WHERE bc.business_dt = DATE('{escape_sql(business_dt)}')
+WHERE ccb.business_dt = DATE('{escape_sql(business_dt)}')
 
 """
 

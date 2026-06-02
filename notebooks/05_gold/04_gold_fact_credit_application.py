@@ -231,4 +231,5 @@ except Exception as error:
 
 finally:
     close_logger(logger)
-    dbutils.notebook.exit(message)
+
+dbutils.notebook.exit(message)
