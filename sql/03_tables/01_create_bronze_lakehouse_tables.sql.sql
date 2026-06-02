@@ -453,3 +453,39 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.bronze.column_description (
 )
 USING DELTA
 PARTITIONED BY (ingestion_date);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.application_train ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.application_test ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.bureau_balance ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.bureau ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.previous_application ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.pos_cash_balance ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.credit_card_balance ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.installments_payments ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.bronze.column_description ADD COLUMNS (business_dt DATE);
