@@ -9,6 +9,7 @@
 
 import sys
 import uuid
+from datetime import date
 
 # COMMAND ----------
 
@@ -53,6 +54,7 @@ dbutils.widgets.text("catalog_name", "credit_risk_dev")
 dbutils.widgets.text("entity_name", "")
 dbutils.widgets.text("pipeline_run_id", "")
 dbutils.widgets.text("write_mode", "overwrite")
+dbutils.widgets.text("business_dt", "")
 
 # COMMAND ----------
 
@@ -60,6 +62,7 @@ catalog_name = dbutils.widgets.get("catalog_name").strip()
 entity_name = dbutils.widgets.get("entity_name").strip()
 pipeline_run_id = dbutils.widgets.get("pipeline_run_id").strip() or str(uuid.uuid4())
 write_mode = dbutils.widgets.get("write_mode").strip().lower()
+business_dt = dbutils.widgets.get("business_dt").strip() or str(date.today())
 
 # COMMAND ----------
 
