@@ -10,7 +10,7 @@ from src.utils.sql_utils import escape_sql, bool_to_sql
 # Build COPY INTO SQL for raw Bronze ingestion
 #=====================================================================
 
-def build_copy_into_sql(config: dict, pipeline_run_id: str, force_reload: bool = False) -> str:
+def build_copy_into_sql(config: dict, pipeline_run_id: str, business_dt: str, force_reload: bool = False) -> str:
 
     querry = f"""
     COPY INTO {config["target_table_full_name"]}
@@ -20,6 +20,7 @@ def build_copy_into_sql(config: dict, pipeline_run_id: str, force_reload: bool =
             _metadata.file_name AS source_file_name,
             _metadata.file_path AS source_file_path,
             '{escape_sql(pipeline_run_id)}' AS pipeline_run_id,
+            to_date('{escape_sql(business_dt)}') AS business_dt,
             current_timestamp() AS ingestion_timestamp,
             current_date() AS ingestion_date
         FROM '{escape_sql(config["source_path"])}'

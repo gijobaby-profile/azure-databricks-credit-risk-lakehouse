@@ -6,6 +6,7 @@
 
 import sys
 import uuid
+from datetime import date
 
 # COMMAND ----------
 
@@ -21,6 +22,7 @@ dbutils.widgets.text("catalog_name", "credit_risk_dev")
 dbutils.widgets.text("entity_name", "")
 dbutils.widgets.text("pipeline_run_id", "")
 dbutils.widgets.text("force_reload", "false")
+dbutils.widgets.text("business_dt", "")
 
 # COMMAND ----------
 
@@ -28,6 +30,7 @@ catalog_name = dbutils.widgets.get("catalog_name").strip()
 entity_name = dbutils.widgets.get("entity_name").strip()
 pipeline_run_id = dbutils.widgets.get("pipeline_run_id").strip() or str(uuid.uuid4())
 force_reload = dbutils.widgets.get("force_reload").strip().lower() == "true"
+business_dt = dbutils.widgets.get("business_dt").strip() or str(date.today())
 
 # COMMAND ----------
 
@@ -79,8 +82,8 @@ logger = get_logger(
 log_step(
     logger,
     f"Bronze ingestion parameters | catalog_name={catalog_name} | "
-    f"entity_name={entity_name} | pipeline_run_id={pipeline_run_id} | "
-    f"force_reload={force_reload}"
+    f"entity_name={entity_name} | business_dt={business_dt} | "
+    f"pipeline_run_id={pipeline_run_id} | force_reload={force_reload}"
 )
 log_step(logger, f"Runtime log file path: {log_file_path}")
 
@@ -119,7 +122,7 @@ try:
     log_step(logger, f"before table count = {before_count}")
 
     log_step(logger, "Building COPY INTO SQL")
-    copy_sql = build_copy_into_sql(config, pipeline_run_id, force_reload)
+    copy_sql = build_copy_into_sql(config, pipeline_run_id, business_dt, force_reload)
     print(copy_sql)
     log_step(logger, f"COPY INTO SQL = {copy_sql}")
 
