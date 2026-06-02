@@ -463,3 +463,43 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.standardized_column_descriptio
 )
 USING DELTA
 PARTITIONED BY (standardization_date);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_application_train
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_application_test
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_bureau
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_bureau_balance
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_previous_application
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_pos_cash_balance
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_credit_card_balance
+ADD COLUMNS (business_dt DATE);
+
+-- COMMAND ----------
+
+ALTER TABLE credit_risk_dev.silver.standardized_installments_payments
+ADD COLUMNS (business_dt DATE);
