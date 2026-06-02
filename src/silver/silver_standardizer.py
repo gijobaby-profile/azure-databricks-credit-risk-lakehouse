@@ -64,7 +64,8 @@ def validate_source_columns(bronze_df: DataFrame, column_config: List[Dict]) -> 
 def build_standardized_dataframe(
     bronze_df: DataFrame,
     column_config: List[Dict],
-    pipeline_run_id: str
+    pipeline_run_id: str,
+    business_dt: str
 ) -> DataFrame:
 
     select_exprs = []
@@ -90,6 +91,7 @@ def build_standardized_dataframe(
 
     select_exprs.extend([
         F.lit(pipeline_run_id).alias("standardization_run_id"),
+        F.to_date(F.lit(business_dt)).alias("business_dt"),
         F.current_timestamp().alias("standardization_timestamp"),
         F.current_date().alias("standardization_date"),
     ])

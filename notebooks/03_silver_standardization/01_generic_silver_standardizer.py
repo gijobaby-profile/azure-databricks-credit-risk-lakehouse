@@ -149,7 +149,8 @@ try:
     standardized_df = build_standardized_dataframe(
         bronze_df=bronze_df,
         column_config=column_config,
-        pipeline_run_id=pipeline_run_id
+        pipeline_run_id=pipeline_run_id,
+        business_dt=business_dt
     )
 
     log_step(logger, "Splitting valid and rejected records")
