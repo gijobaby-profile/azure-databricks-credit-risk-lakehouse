@@ -4,7 +4,10 @@
 # Purpose     : Audit logging for Bronze ingestion
 # =====================================================================
 
+import random
+import time
 import uuid
+from typing import Optional
 from src.utils.sql_utils import escape_sql, bool_to_sql
 
 # =====================================================================
