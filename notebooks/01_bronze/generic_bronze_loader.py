@@ -171,6 +171,22 @@ dbutils.notebook.exit(success_message)
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC DESCRIBE TABLE credit_risk_dev.audit.table_load_log;
+
+# COMMAND ----------
+
+import src.logging.audit_logger as audit_logger
+import inspect
+
+print("audit_logger file used:")
+print(audit_logger.__file__)
+
+print("start_load source code used:")
+print(inspect.getsource(audit_logger.start_load))
+
+# COMMAND ----------
+
 log_dir = f"/Volumes/{catalog_name}/files/vol_logs_home_credit_dev/pipeline/bronze/{entity_name}/"
 
 files = dbutils.fs.ls(log_dir)
