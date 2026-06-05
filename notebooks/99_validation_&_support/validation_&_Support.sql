@@ -1,5 +1,5 @@
 -- Databricks notebook source
-DESCRIBE history credit_risk_dev.gold.dim_bureau_credit;
+select * from credit_risk_dev.config.bronze_ingestion_config
 
 -- COMMAND ----------
 

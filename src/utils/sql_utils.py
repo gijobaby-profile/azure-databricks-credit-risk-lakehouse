@@ -32,4 +32,16 @@ def quote_identifier(identifier: str) -> str:
 
     return f"`{str(identifier).replace('`', '``')}`"
 
+# =====================================================================
+# Safely convert a value to integer.
+# Returns the default value if conversion fails.
+# Useful before injecting numeric values into SQL strings.
+# =====================================================================
+def safe_int(value, default: int = 0) -> int:
+    try:
+        if value is None:
+            return default
+        return int(value)
+    except Exception:
+        return default
 #=====================================================================
