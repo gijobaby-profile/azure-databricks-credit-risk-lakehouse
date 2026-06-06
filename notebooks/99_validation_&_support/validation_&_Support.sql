@@ -1,5 +1,5 @@
 -- Databricks notebook source
-select * from credit_risk_dev.config.bronze_ingestion_config
+select * from credit_risk_dev.bronze.column_description
 
 -- COMMAND ----------
 
