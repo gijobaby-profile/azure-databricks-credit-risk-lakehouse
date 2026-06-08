@@ -73,3 +73,9 @@ COMMENT 'Schema for external volumes used by pipelines';
 
 ----Validation
 SHOW SCHEMAS in credit_risk_dev
+
+-- COMMAND ----------
+
+CREATE SCHEMA IF NOT EXISTS credit_risk_dev.orchestration
+MANAGED LOCATION 'abfss://uc-managed@stcrcurateddevuks001.dfs.core.windows.net/credit_risk_dev/orchestration/'
+COMMENT 'ADF and Databricks orchestration metadata and runtime control tables';

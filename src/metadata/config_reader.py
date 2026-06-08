@@ -5,12 +5,13 @@
 # =====================================================================
 
 from src.utils.sql_utils import escape_sql, bool_to_sql
+from src.utils.common_utils import resolve_source_path
 
 # =====================================================================
 # Return one enabled Bronze ingestion config row for an entity
 # =====================================================================
 
-def get_bronze_config(spark, catalog_name: str, entity_name: str) -> dict:
+def get_bronze_config(spark, catalog_name: str, entity_name: str, business_dt:str) -> dict:
     
     #check whether entity name is empty or None, use if not so will handle both
     if not entity_name:
@@ -40,4 +41,17 @@ def get_bronze_config(spark, catalog_name: str, entity_name: str) -> dict:
     if len(rows) > 1:
         raise ValueError(f"Multiple enabled Bronze ingestion configs found for entity_name={entity_name}")
 
-    return rows[0].asDict()
+    config = rows[0].asDict()
+
+    # Keep original metadata path for traceability.
+    config["source_path_template"] = config["source_path"]
+
+    # Resolve source_path with entity_name and business_dt.
+    if business_dt:
+        config["source_path"] = resolve_source_path(
+            source_path_template=config["source_path"],
+            entity_name=config["entity_name"],
+            business_dt=business_dt
+        )
+
+    return config
