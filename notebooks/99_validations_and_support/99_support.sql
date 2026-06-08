@@ -40,5 +40,5 @@ select * from credit_risk_dev.config.bronze_ingestion_config
 
 update  credit_risk_dev.config.bronze_ingestion_config
 set source_path = '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/{entity_name}/{business_dt}'
-where entity_name='application_train'
+where entity_name in ('application_train','application_test','bureau','bureau_balance','previous_application','pos_cash_balance','credit_card_balance','installments_payments')
 
