@@ -47,6 +47,7 @@ from src.logging.audit_logger import (
 )
 from src.logging.error_logger import log_error
 from src.utils.logger_utils import get_logger, log_step, close_logger
+from src.utils.common_utils import resolve_source_path
 
 
 # COMMAND ----------
@@ -102,7 +103,7 @@ logger.info(
 try:
     # Read the bronze_ingestion_config table to get the table Nmae
     log_step(logger, f"Reading active Bronze config | entity_name={entity_name}")
-    config = get_bronze_config(spark, catalog_name, entity_name)
+    config = get_bronze_config(spark, catalog_name, entity_name, business_dt)
     target_table = config["target_table_full_name"]
 
     # To check the target table is already existing or not
