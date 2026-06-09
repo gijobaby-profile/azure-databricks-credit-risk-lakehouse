@@ -1,0 +1,32 @@
+resources:
+  jobs:
+    job_02b_entity_conformance:
+      name: JOB_02B_ENTITY_CONFORMANCE
+      tasks:
+        - task_key: entity_conformance_notebook
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\notebooks\04_silver_conformance\02_generic_silver_conformed_entity.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+      parameters:
+        - name: catalog_name
+          default: credit_risk_dev
+        - name: entity_name
+          default: application_train
+        - name: business_dt
+          default: 2026-06-02
+        - name: pipeline_run_id
+          default: ManualRun-002-20260602
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}
