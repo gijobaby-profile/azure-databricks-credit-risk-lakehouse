@@ -1,5 +1,12 @@
 -- Databricks notebook source
 Delete from credit_risk_dev.bronze.application_train where business_dt is null;
+dev
+=======
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.bronze.application_test where business_dt is not null
+main
 
 -- COMMAND ----------
 
