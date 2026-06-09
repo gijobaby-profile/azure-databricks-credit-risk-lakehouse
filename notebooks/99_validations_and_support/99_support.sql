@@ -1,5 +1,9 @@
 -- Databricks notebook source
-select * from credit_risk_dev.bronze.application_train where business_dt is not null
+Delete from credit_risk_dev.bronze.application_train where business_dt is null;
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.bronze.application_test where business_dt is not null
 
 -- COMMAND ----------
 
