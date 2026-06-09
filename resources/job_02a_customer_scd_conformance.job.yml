@@ -8,7 +8,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\01_silver_conformed_customer_scd2.py
+            notebook_path: ..\notebooks\04_silver_conformance\01_silver_conformed_customer_scd2.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0

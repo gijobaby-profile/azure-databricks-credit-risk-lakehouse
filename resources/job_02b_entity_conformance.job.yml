@@ -8,7 +8,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\02_generic_silver_conformed_entity.py
+            notebook_path: ..\notebooks\04_silver_conformance\02_generic_silver_conformed_entity.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0

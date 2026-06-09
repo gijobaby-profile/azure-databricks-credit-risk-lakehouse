@@ -8,7 +8,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\01_gold_dim_customer.py
+            notebook_path: ..\notebooks\05_gold\01_gold_dim_customer.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -18,7 +18,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\02_gold_dim_loan_application.py
+            notebook_path: ..\notebooks\05_gold\02_gold_dim_loan_application.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -28,7 +28,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\03_gold_dim_bureau_credit.py
+            notebook_path: ..\notebooks\05_gold\03_gold_dim_bureau_credit.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -41,7 +41,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\04_gold_fact_credit_application.py
+            notebook_path: ..\notebooks\05_gold\04_gold_fact_credit_application.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -54,7 +54,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\05_gold_fact_bureau_credit_exposure.py
+            notebook_path: ..\notebooks\05_gold\05_gold_fact_bureau_credit_exposure.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -66,7 +66,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\06_gold_fact_credit_card_balance_monthly.py
+            notebook_path: ..\notebooks\05_gold\06_gold_fact_credit_card_balance_monthly.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -78,7 +78,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\07_gold_fact_installment_payment.py
+            notebook_path: ..\notebooks\05_gold\07_gold_fact_installment_payment.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -90,7 +90,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\08_build_fact_pos_cash_balance_monthly.py
+            notebook_path: ..\notebooks\05_gold\08_build_fact_pos_cash_balance_monthly.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -102,7 +102,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\09_build_fact_customer_risk_snapshot.py
+            notebook_path: ..\notebooks\05_gold\09_build_fact_customer_risk_snapshot.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0

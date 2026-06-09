@@ -20,7 +20,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\generic_bronze_loader.py
+            notebook_path: ..\notebooks\01_bronze\generic_bronze_loader.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
@@ -32,7 +32,7 @@ resources:
           disabled: false
           email_notifications: {}
           notebook_task:
-            notebook_path: ..\src\01_generic_silver_standardizer.py
+            notebook_path: ..\notebooks\03_silver_standardization\01_generic_silver_standardizer.py
             source: WORKSPACE
           run_if: ALL_SUCCESS
           timeout_seconds: 0
