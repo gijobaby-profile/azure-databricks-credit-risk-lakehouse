@@ -1,0 +1,60 @@
+resources:
+  jobs:
+    job_01_entity_bronze_silver_standardization:
+      name: JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION
+      job_clusters:
+        - job_cluster_key: bronze_silver_job_cluster
+          new_cluster:
+            cluster_name: ""
+            data_security_mode: DATA_SECURITY_MODE_STANDARD
+            is_single_node: true
+            kind: CLASSIC_PREVIEW
+            node_type_id: Standard_DS3_v2
+            runtime_engine: PHOTON
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            spark_version: 17.3.x-scala2.13
+      tasks:
+        - task_key: bronze_loader
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\notebooks\01_bronze\generic_bronze_loader.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: silver_standardizer
+          depends_on:
+            - task_key: bronze_loader
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\notebooks\03_silver_standardization\01_generic_silver_standardizer.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+      parameters:
+        - name: business_dt
+          default: 2026-06-02
+        - name: catalog_name
+          default: credit_risk_dev
+        - name: entity_name
+          default: credit_card_balance
+        - name: force_reload
+          default: "false"
+        - name: pipeline_run_id
+          default: manual_test_20260602_002
+        - name: write_mode
+          default: overwrite
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}
