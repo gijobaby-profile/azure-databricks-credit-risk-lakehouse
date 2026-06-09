@@ -1,0 +1,123 @@
+resources:
+  jobs:
+    job_03_gold:
+      name: JOB_03_GOLD
+      tasks:
+        - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\01_gold_dim_customer.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 02_gold_dim_loan_application
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\02_gold_dim_loan_application.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 03_gold_dim_bureau_credit
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\03_gold_dim_bureau_credit.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 04_gold_fact_credit_application
+          depends_on:
+            - task_key: 02_gold_dim_loan_application
+            - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\04_gold_fact_credit_application.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 05_gold_fact_bureau_credit_exposure
+          depends_on:
+            - task_key: 01_gold_dim_customer
+            - task_key: 03_gold_dim_bureau_credit
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\05_gold_fact_bureau_credit_exposure.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 06_gold_fact_credit_card_balance_monthly
+          depends_on:
+            - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\06_gold_fact_credit_card_balance_monthly.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 07_gold_fact_installment_payment
+          depends_on:
+            - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\07_gold_fact_installment_payment.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 08_build_fact_pos_cash_balance_monthly
+          depends_on:
+            - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\08_build_fact_pos_cash_balance_monthly.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+        - task_key: 09_build_fact_customer_risk_snapshot
+          depends_on:
+            - task_key: 01_gold_dim_customer
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\09_build_fact_customer_risk_snapshot.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+      parameters:
+        - name: catalog_name
+          default: credit_risk_dev
+        - name: business_dt
+          default: 2026-06-02
+        - name: pipeline_run_id
+          default: manual_test_20260602_001
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}

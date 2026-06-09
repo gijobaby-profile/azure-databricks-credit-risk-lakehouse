@@ -1,0 +1,30 @@
+resources:
+  jobs:
+    job_02a_customer_scd_conformance:
+      name: JOB_02A_CUSTOMER_SCD_CONFORMANCE
+      tasks:
+        - task_key: customer_scd_notebook
+          existing_cluster_id: 0511-180517-1zf1i1a8
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ..\src\01_silver_conformed_customer_scd2.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+          webhook_notifications: {}
+      parameters:
+        - name: catalog_name
+          default: credit_risk_dev
+        - name: business_dt
+          default: 2026-06-02
+        - name: pipeline_run_id
+          default: manual_test_20260602_001
+      email_notifications:
+        no_alert_for_skipped_runs: false
+      max_concurrent_runs: 1
+      performance_target: PERFORMANCE_OPTIMIZED
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}
