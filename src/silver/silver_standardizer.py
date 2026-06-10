@@ -100,7 +100,14 @@ def build_standardized_dataframe(
     #  The * unpacks the list so select() receives each cast/rename/metadata column separately
     #  without * it will pass the select_exprs as a single list argument which fails the select().
 
-    return bronze_df.select(*select_exprs)
+    # return bronze_df.select(*select_exprs)
+
+    standardized_df = bronze_df.select(*select_exprs)
+
+    print("===== STANDARDIZED DF COLUMNS AFTER SELECT =====")
+    print(standardized_df.columns)
+
+    return standardized_df
 
 # =====================================================================
 # Build rejection condition for required fields
@@ -148,6 +155,9 @@ def build_rejection_condition(column_config: List[Dict]) -> Optional[Column]:
                 if condition is None
                 else condition | current_condition
             )
+
+    print("===== Rejection Condition =====")
+    print(condition)
 
     return condition
 
@@ -211,6 +221,12 @@ def split_valid_rejected(
     )
 
     valid_df = drop_bronze_temp_columns(valid_base_df)
+
+    print("===== VALID DF COLUMNS =====")
+    print(valid_df.columns)
+
+    print("===== REJECTED DF COLUMNS =====")
+    print(rejected_df.columns)
 
     return valid_df, rejected_df
 
