@@ -19,26 +19,26 @@ delete from credit_risk_dev.bronze.application_train     where business_dt is nu
 
 -- COMMAND ----------
 
-select count(*),'credit_risk_dev.bronze.application_test      ' as tgt from credit_risk_dev.bronze.application_test      union 
-select count(*),'credit_risk_dev.bronze.bureau                ' as tgt from credit_risk_dev.bronze.bureau                union 
-select count(*),'credit_risk_dev.bronze.bureau_balance        ' as tgt from credit_risk_dev.bronze.bureau_balance        union 
-select count(*),'credit_risk_dev.bronze.previous_application  ' as tgt from credit_risk_dev.bronze.previous_application  union 
-select count(*),'credit_risk_dev.bronze.pos_cash_balance      ' as tgt from credit_risk_dev.bronze.pos_cash_balance      union 
-select count(*),'credit_risk_dev.bronze.credit_card_balance   ' as tgt from credit_risk_dev.bronze.credit_card_balance   union 
-select count(*),'credit_risk_dev.bronze.installments_payments ' as tgt from credit_risk_dev.bronze.installments_payments union 
-select count(*),'credit_risk_dev.bronze.application_train     ' as tgt from credit_risk_dev.bronze.application_train     ; 
+select count(*),business_dt,'credit_risk_dev.bronze.application_test      ' as tgt from credit_risk_dev.bronze.application_test      group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.bureau                ' as tgt from credit_risk_dev.bronze.bureau                group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.bureau_balance        ' as tgt from credit_risk_dev.bronze.bureau_balance        group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.previous_application  ' as tgt from credit_risk_dev.bronze.previous_application  group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.pos_cash_balance      ' as tgt from credit_risk_dev.bronze.pos_cash_balance      group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.credit_card_balance   ' as tgt from credit_risk_dev.bronze.credit_card_balance   group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.installments_payments ' as tgt from credit_risk_dev.bronze.installments_payments group by 2,3 union 
+select count(*),business_dt,'credit_risk_dev.bronze.application_train     ' as tgt from credit_risk_dev.bronze.application_train     group by 2,3 ; 
 
 -- COMMAND ----------
 
-select count(*),'credit_risk_dev.silver.standardized_application_test     ' as tbl from credit_risk_dev.silver.standardized_application_test      union
-select count(*),'credit_risk_dev.silver.standardized_application_train    ' as tbl from credit_risk_dev.silver.standardized_application_train     union
-select count(*),'credit_risk_dev.silver.standardized_bureau               ' as tbl from credit_risk_dev.silver.standardized_bureau                union
-select count(*),'credit_risk_dev.silver.standardized_bureau_balance       ' as tbl from credit_risk_dev.silver.standardized_bureau_balance        union
-select count(*),'credit_risk_dev.silver.standardized_column_description   ' as tbl from credit_risk_dev.silver.standardized_column_description    union
-select count(*),'credit_risk_dev.silver.standardized_credit_card_balance  ' as tbl from credit_risk_dev.silver.standardized_credit_card_balance   union
-select count(*),'credit_risk_dev.silver.standardized_installments_payments' as tbl from credit_risk_dev.silver.standardized_installments_payments union
-select count(*),'credit_risk_dev.silver.standardized_pos_cash_balance     ' as tbl from credit_risk_dev.silver.standardized_pos_cash_balance      union
-select count(*),'credit_risk_dev.silver.standardized_previous_application ' as tbl from credit_risk_dev.silver.standardized_previous_application  ;
+
+select count(*),business_dt,'credit_risk_dev.silver.standardized_application_test     ' as tbl from credit_risk_dev.silver.standardized_application_test      group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_application_train    ' as tbl from credit_risk_dev.silver.standardized_application_train     group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_bureau               ' as tbl from credit_risk_dev.silver.standardized_bureau                group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_bureau_balance       ' as tbl from credit_risk_dev.silver.standardized_bureau_balance        group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_credit_card_balance  ' as tbl from credit_risk_dev.silver.standardized_credit_card_balance   group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_installments_payments' as tbl from credit_risk_dev.silver.standardized_installments_payments group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_pos_cash_balance     ' as tbl from credit_risk_dev.silver.standardized_pos_cash_balance      group by 2,3 union
+select count(*),business_dt,'credit_risk_dev.silver.standardized_previous_application ' as tbl from credit_risk_dev.silver.standardized_previous_application  group by 2,3 ;
 
 -- COMMAND ----------
 
@@ -52,26 +52,15 @@ select count(*),'credit_risk_dev.silver.conformed_previous_application    ' as t
 
 -- COMMAND ----------
 
-truncate table credit_risk_dev.silver.conformed_bureau_credit            ;
-truncate table credit_risk_dev.silver.conformed_credit_card_balance      ;
-truncate table credit_risk_dev.silver.conformed_customer_scd2            ;
-truncate table credit_risk_dev.silver.conformed_installment_payment      ;
-truncate table credit_risk_dev.silver.conformed_loan_application         ;
-truncate table credit_risk_dev.silver.conformed_pos_cash_balance         ;
-truncate table credit_risk_dev.silver.conformed_previous_application     ;
-truncate table credit_risk_dev.silver.standardized_application_test      ;
-truncate table credit_risk_dev.silver.standardized_application_train     ;
-truncate table credit_risk_dev.silver.standardized_bureau                ;
-truncate table credit_risk_dev.silver.standardized_bureau_balance        ;
-truncate table credit_risk_dev.silver.standardized_column_description    ;
-truncate table credit_risk_dev.silver.standardized_credit_card_balance   ;
-truncate table credit_risk_dev.silver.standardized_installments_payments ;
-truncate table credit_risk_dev.silver.standardized_pos_cash_balance      ;
-truncate table credit_risk_dev.silver.standardized_previous_application  ;
+select * from credit_risk_dev.bronze.bureau where business_dt='2026-06-02'
 
 -- COMMAND ----------
 
 select * from credit_risk_dev.config.bronze_ingestion_config
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_column_config --where entity_name = 'bureau'
 
 -- COMMAND ----------
 
@@ -88,3 +77,16 @@ select * from credit_risk_dev.config.bronze_ingestion_config
 
 -- MAGIC %python
 -- MAGIC print(dbutils.fs.head('/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/silver/bureau_balance/manual_test_20260602_001.log'))
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC print(dbutils.fs.head('/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/silver/bureau/manual_test_20260602_002.log'))
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.dq.rejected_records --where source_file_name = 'bureau.csv' --and business_dt is not null
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.information_schema.columns where table_schema = 'bronze' and table_name='bureau'
