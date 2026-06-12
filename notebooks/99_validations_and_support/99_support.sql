@@ -10,8 +10,8 @@ dev
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.bronze.application_test where business_dt is not null
-main
+select * from credit_risk_dev.bronze.application_test where business_dt is not null;
+
 
 -- COMMAND ----------
 
