@@ -1,7 +1,7 @@
 # =====================================================================
 # Type        : Python file
-# File        : src/metadata/config_reader.py
-# Purpose     : Read Bronze ingestion configuration file
+# File        : src/utils/common_utils.py
+# Purpose     : Common helper utilities
 # =====================================================================
 
 from src.utils.sql_utils import escape_sql, bool_to_sql
