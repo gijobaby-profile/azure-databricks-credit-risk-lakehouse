@@ -90,3 +90,12 @@ select * from credit_risk_dev.dq.rejected_records --where source_file_name = 'bu
 -- COMMAND ----------
 
 select * from credit_risk_dev.information_schema.columns where table_schema = 'bronze' and table_name='bureau'
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC print(dbutils.fs.head('/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/silver/bureau_balance/manual_test_20260602_002.log'))
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.dq.rejected_records where source_file_name='bureau_balance.csv'
