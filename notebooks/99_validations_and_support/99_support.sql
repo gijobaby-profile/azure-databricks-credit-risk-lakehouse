@@ -64,19 +64,12 @@ select * from credit_risk_dev.config.silver_column_config --where entity_name = 
 
 -- COMMAND ----------
 
-update  credit_risk_dev.config.bronze_ingestion_config
-set source_path = '/Volumes/credit_risk_dev/files/vol_landing_home_credit_dev/{entity_name}/{business_dt}'
-where entity_name in ('application_train','application_test','bureau','bureau_balance','previous_application','pos_cash_balance','credit_card_balance','installments_payments')
+
 
 
 -- COMMAND ----------
 
 select * from credit_risk_dev.config.bronze_ingestion_config
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC print(dbutils.fs.head('/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/silver/bureau_balance/manual_test_20260602_001.log'))
 
 -- COMMAND ----------
 
