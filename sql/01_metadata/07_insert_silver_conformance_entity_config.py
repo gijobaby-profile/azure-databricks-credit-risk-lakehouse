@@ -121,14 +121,52 @@ SELECT
     standardization_timestamp
 FROM (
     SELECT
-        *,
+        sk_id_curr,
+		cast(target as int) as target ,
+		name_contract_type,
+		amt_credit,
+		amt_annuity,
+		amt_goods_price,
+		amt_income_total,
+		name_income_type,
+		name_education_type,
+		name_family_status,
+		name_housing_type,
+		occupation_type,
+		days_birth,
+		days_employed,
+		days_registration,
+		days_id_publish,
+		source_file_name,
+		source_file_path,
+		pipeline_run_id,
+		standardization_timestamp,
         'train' AS application_source
     FROM credit_risk_dev.silver.standardized_application_train
 
     UNION ALL
 
     SELECT
-        *,
+        sk_id_curr,
+		cast(NULL as int) as target,
+		name_contract_type,
+		amt_credit,
+		amt_annuity,
+		amt_goods_price,
+		amt_income_total,
+		name_income_type,
+		name_education_type,
+		name_family_status,
+		name_housing_type,
+		occupation_type,
+		days_birth,
+		days_employed,
+		days_registration,
+		days_id_publish,
+		source_file_name,
+		source_file_path,
+		pipeline_run_id,
+		standardization_timestamp,
         'test' AS application_source
     FROM credit_risk_dev.silver.standardized_application_test
 )
