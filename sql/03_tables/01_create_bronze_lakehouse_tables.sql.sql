@@ -273,7 +273,7 @@ PARTITIONED BY (ingestion_date);
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.bronze.bureau (
   sk_id_curr STRING,
-  sk_bureau_id STRING,
+  sk_id_bureau STRING,
   credit_active STRING,
   credit_currency STRING,
   days_credit STRING,
@@ -301,7 +301,7 @@ PARTITIONED BY (ingestion_date);
 -- COMMAND ----------
 
 CREATE TABLE IF NOT EXISTS credit_risk_dev.bronze.bureau_balance (
-  sk_bureau_id STRING,
+  sk_id_bureau STRING,
   months_balance STRING,
   status STRING,
   source_file_name STRING,
