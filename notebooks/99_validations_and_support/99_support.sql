@@ -5,13 +5,44 @@ where table_schema = 'silver' order by table_name
 -- COMMAND ----------
 
 Delete from credit_risk_dev.bronze.application_train where business_dt is null;
-dev
-=======
+
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.bronze.application_test where business_dt is not null;
+select *
 
+
+-- COMMAND ----------
+
+delete from credit_risk_dev.bronze.bureau where
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.bronze.bureau limit 2
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_column_config where entity_name='bureau'
+
+
+
+-- COMMAND ----------
+
+update  credit_risk_dev.config.silver_column_config
+set source_column_name = 'sk_id_bureau'
+where entity_name='bureau_balance'
+and source_column_position = 1
+
+-- COMMAND ----------
+
+update  credit_risk_dev.config.silver_column_config
+set source_column_name = 'sk_id_bureau'
+where entity_name='bureau'
+and source_column_position = 2
+
+-- COMMAND ----------
+
+delete from credit_risk_dev.bronze.application_test      where business_dt='2026-06-02'
 
 -- COMMAND ----------
 
@@ -99,3 +130,49 @@ select * from credit_risk_dev.information_schema.columns where table_schema = 'b
 -- COMMAND ----------
 
 select * from credit_risk_dev.dq.rejected_records where source_file_name='bureau_balance.csv'
+
+-- COMMAND ----------
+
+truncate table credit_risk_dev.bronze.bureau_balance
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_conformance_entity_config
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_conformance_entity_config
+
+-- COMMAND ----------
+
+SELECT
+        sk_id_curr,
+		target,
+		name_contract_type,
+		amt_credit,
+		amt_annuity,
+		amt_goods_price,
+		amt_income_total,
+		name_income_type,
+		name_education_type,
+		name_family_status,
+		name_housing_type,
+		occupation_type,
+		days_birth,
+		days_employed,
+		days_registration,
+		days_id_publish,
+		source_file_name,
+		source_file_path,
+		pipeline_run_id,
+		standardization_timestamp,
+        'train' AS application_source
+    FROM credit_risk_dev.silver.standardized_application_train
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.information_schema.columns where table_name='standardized_application_train'
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.silver.standardized_application_train limit 5

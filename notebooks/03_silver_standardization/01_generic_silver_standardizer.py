@@ -10,6 +10,7 @@
 import sys
 import uuid
 from datetime import date
+from pyspark.sql import functions as F
 
 # COMMAND ----------
 
@@ -136,8 +137,16 @@ try:
     log_step(logger, f"Starting table load audit | target_table={target_table}")
     table_load_id = start_load(spark, catalog_name, pipeline_run_id, config)
 
-    log_step(logger, f"Reading Bronze data | bronze_table={bronze_table}")
-    bronze_df = spark.table(bronze_table)
+    log_step(logger, f"Reading Bronze data | bronze_table={bronze_table} | business_dt={business_dt}")
+    bronze_df = (
+        spark.table(bronze_table)
+        .filter(F.col("business_dt") == F.lit(business_dt))
+    )
+    
+    bronze_count = bronze_df.count()
+
+    if bronze_count == 0:
+        raise ValueError(f"No Bronze records found for table={bronze_table}, business_dt={business_dt}" )
 
     log_step(logger, "Validating configured source columns exist in Bronze")
     validate_source_columns(bronze_df, column_config)
