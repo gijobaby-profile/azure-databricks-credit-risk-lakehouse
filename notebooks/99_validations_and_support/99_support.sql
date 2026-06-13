@@ -1,10 +1,10 @@
 -- Databricks notebook source
-select table_catalog||'.'||table_schema||'.'||table_name as tbl from credit_risk_dev.information_schema.tables 
-where table_schema = 'silver' order by table_name
+ SELECT
+    to_date('2026-06-02 or ")
 
 -- COMMAND ----------
 
-Delete from credit_risk_dev.bronze.application_train where business_dt is null;
+select * from credit_risk_dev.config.silver_conformance_entity_config
 
 
 -- COMMAND ----------
@@ -99,32 +99,6 @@ select count(*),'credit_risk_dev.silver.conformed_previous_application    ' as t
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.bronze.bureau where business_dt='2026-06-02'
-
--- COMMAND ----------
-
-select * from credit_risk_dev.config.bronze_ingestion_config
-
--- COMMAND ----------
-
-select * from credit_risk_dev.config.silver_column_config --where entity_name = 'bureau'
-
--- COMMAND ----------
-
-
-
-
--- COMMAND ----------
-
-select * from credit_risk_dev.config.bronze_ingestion_config
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC print(dbutils.fs.head('/Volumes/credit_risk_dev/files/vol_logs_home_credit_dev/pipeline/silver/bureau/manual_test_20260602_002.log'))
-
--- COMMAND ----------
-
 select * from credit_risk_dev.dq.rejected_records --where source_file_name = 'bureau.csv' --and business_dt is not null
 
 -- COMMAND ----------
@@ -150,7 +124,8 @@ select * from  credit_risk_dev.dq.data_quality_rules
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.config.silver_conformance_entity_config
+select * from credit_risk_dev.information_schema.columns where table_name='standardized_application_test'
+and column_name='cnt_fam_members'
 
 -- COMMAND ----------
 
@@ -158,34 +133,30 @@ select * from credit_risk_dev.config.silver_conformance_entity_config
 
 -- COMMAND ----------
 
-SELECT
-        sk_id_curr,
-		target,
-		name_contract_type,
-		amt_credit,
-		amt_annuity,
-		amt_goods_price,
-		amt_income_total,
-		name_income_type,
-		name_education_type,
-		name_family_status,
-		name_housing_type,
-		occupation_type,
-		days_birth,
-		days_employed,
-		days_registration,
-		days_id_publish,
-		source_file_name,
-		source_file_path,
-		pipeline_run_id,
-		standardization_timestamp,
-        'train' AS application_source
-    FROM credit_risk_dev.silver.standardized_application_train
+select * from credit_risk_dev.config.silver_conformance_entity_config
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.information_schema.columns where table_name='standardized_application_train'
+ SELECT
+            entity_name,
+            derived_column_name,
+            derived_sql_expression,
+            target_data_type,
+            is_active,
+            column_sequence
+        FROM credit_risk_dev.config.silver_conformance_derived_column_config
+        WHERE lower(entity_name) = (lower('credit_card_balance'))
+          AND is_active = true
+        ORDER BY column_sequence
 
 -- COMMAND ----------
 
-select * from credit_risk_dev.silver.standardized_application_train limit 5
+select * from  credit_risk_dev.config.silver_conformance_derived_column_config
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.information_schema.columns where table_name = 'conformed_credit_card_balance'
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.information_schema.columns where table_name = 'standardized_credit_card_balance'

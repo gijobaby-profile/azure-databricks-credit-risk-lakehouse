@@ -115,7 +115,12 @@ def apply_conformance_dq_rules(
     result_rows = []
 
     for rule in dq_rules:
-        failed_condition = F.expr(rule["rule_sql_expression"])
+        rule_sql_expression = rule["rule_sql_expression"]
+
+        # Spark SQL can return NULL for some boolean expressions.
+        # NULL must be treated as False, otherwise records may disappear
+        # from both valid_df and rejected_df.
+        failed_condition = F.coalesce(F.expr(rule_sql_expression),F.lit(False))
         failed_conditions.append(failed_condition)
 
         failed_df = df.filter(failed_condition)
@@ -132,8 +137,23 @@ def apply_conformance_dq_rules(
         })
 
         if failed_count > 0:
-            source_file_name_expr = F.col("source_file_name") if "source_file_name" in failed_df.columns else F.lit(None).cast("string")
-            source_file_path_expr = F.col("source_file_path") if "source_file_path" in failed_df.columns else F.lit(None).cast("string")
+            source_file_name_expr = (
+                    F.col("source_file_name")
+                    if "source_file_name" in failed_df.columns
+                    else F.lit(None).cast("string")
+                )
+
+            source_file_path_expr = (
+                    F.col("source_file_path")
+                    if "source_file_path" in failed_df.columns
+                    else F.lit(None).cast("string")
+                )
+
+            business_dt_expr = (
+                    F.col("business_dt")
+                    if "business_dt" in failed_df.columns
+                    else F.to_date(F.lit(business_dt)) if business_dt else F.lit(None).cast("date")
+                )
 
             rejected_dfs.append(
                 failed_df.select(
@@ -149,11 +169,25 @@ def apply_conformance_dq_rules(
                     F.lit(None).cast("string").alias("quarantine_path"),
                     F.current_timestamp().alias("created_timestamp"),
                     F.current_date().alias("created_date"),
+                    business_dt_expr.alias("business_dt")
                 )
             )
 
-    combined_failure_condition = reduce(lambda left, right: left | right, failed_conditions)
-    valid_df = df.filter(~combined_failure_condition)
+    # ---------------------------------------------------------------------
+    # Build valid dataframe.
+    # Since dq rules are failure rules:
+    # rejected_df = records matching any failure condition
+    # valid_df    = records not matching any failure condition
+    # ---------------------------------------------------------------------
+
+    if failed_conditions:
+        combined_failure_condition = reduce(lambda left, right: left | right,failed_conditions)
+        rejected_base_df = df.filter(combined_failure_condition)
+        valid_df = df.filter(~combined_failure_condition)
+    else:
+        rejected_base_df = df.limit(0)
+        valid_df = df
+
 
     if rejected_dfs:
         rejected_df = reduce(lambda left, right: left.unionByName(right), rejected_dfs)
@@ -161,6 +195,13 @@ def apply_conformance_dq_rules(
         rejected_df = _empty_rejected_df(df)
 
     rejected_df = _add_business_dt_if_missing(rejected_df, business_dt)
+
+    valid_count = valid_df.count()
+    rejected_base_count = rejected_base_df.count()
+
+    print(f"valid_count={valid_count}")
+    print(f"rejected_base_count={rejected_base_count}")
+    print(f"balance_check={valid_count + rejected_base_count}")
 
     df.unpersist()
     return valid_df, rejected_df, result_rows
@@ -232,7 +273,7 @@ def write_conformance_dq_results(
                 SELECT
                     uuid(),
                     '{escape_sql(pipeline_run_id)}',
-                    to_date('{escape_sql(business_dt or result.get("business_dt") or "")}'),
+                    to_date('{escape_sql(business_dt or result.get("business_dt") or "1900-01-01")}'),
                     '{escape_sql(result["rule_id"])}',
                     '{escape_sql(table_name)}',
                     '{escape_sql(result["rule_name"])}',
