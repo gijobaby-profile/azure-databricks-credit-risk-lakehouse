@@ -81,12 +81,14 @@ config_for_error = None
 # COMMAND ----------
 
 try:
+    log_step(logger, f"Fetching silver conformance entity configurations | entity_name = {entity_name}")
     entity_config = get_silver_conformance_entity_config(spark, catalog_name, entity_name)
 
     if entity_config["is_scd2"]:
         raise ValueError("This generic notebook does not process SCD2 entities. Use 01_build_customer_scd2.py.")
 
     target_table = get_target_table_full_name(entity_config)
+    log_step(logger, f"Target Table Name = {target_table}")
 
     config_for_error = {
         "entity_name": entity_name,
@@ -97,11 +99,16 @@ try:
 
     log_step(logger, f"START | entity={entity_name} | business_dt={business_dt} | target={target_table}")
 
+    log_step(logger, f"Start Pipeline | pipeline_run_id={pipeline_run_id}")
     start_pipeline(spark, catalog_name, pipeline_run_id, f"silver_conformance_{entity_name}")
+
+    log_step(logger, f"Start Table Load | pipeline_run_id={pipeline_run_id}")
     table_load_id = start_load(spark, catalog_name, pipeline_run_id, config_for_error)
 
+    log_step(logger, f"Fetching silver conformance derived colum  configurations | entity_name = {entity_name}")
     derived_config = get_silver_conformance_derived_column_config(spark, catalog_name, entity_name)
 
+    log_step(logger, f"Start building conformed dataframe | entity_name = {entity_name}")
     conformed_df = build_conformed_dataframe(
         spark=spark,
         entity_config=entity_config,
@@ -110,6 +117,7 @@ try:
         business_dt=business_dt
     )
 
+    log_step(logger, f"Reading active conformance dq rules | entity_name = {entity_name}")
     dq_rules = read_active_conformance_dq_rules(
         spark=spark,
         catalog_name=catalog_name,
@@ -117,6 +125,7 @@ try:
         target_table_name=entity_config["target_table_name"]
     )
 
+    log_step(logger, f"Applying conformance dq rules to create valid, reject and dq_results dataframes | entity_name = {entity_name}")
     valid_df, rejected_df, dq_results = apply_conformance_dq_rules(
         df=conformed_df,
         dq_rules=dq_rules,
@@ -127,7 +136,10 @@ try:
     )
 
     rejected_count = write_conformance_rejected_records(rejected_df, catalog_name)
+    log_step(logger, f"Rejected record count = {rejected_count}")
 
+
+    log_step(logger, "Writing conformed entity records")
     records_written = write_conformed_entity(
         df=valid_df,
         spark=spark,
@@ -135,6 +147,7 @@ try:
         business_dt=business_dt
     )
 
+    log_step(logger, "Writing conformed dq result records")
     write_conformance_dq_results(
         spark=spark,
         catalog_name=catalog_name,

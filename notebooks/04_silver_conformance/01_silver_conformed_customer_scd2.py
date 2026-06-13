@@ -113,7 +113,8 @@ try:
         business_dt=business_dt
     )
 
-    #display(source_df.columns)
+    source_count = source_df.count()
+    log_step(logger, f"Silver Conformance source dataframe count | entity_name={entity_name} | record_count={source_count}")
     
     target_schema_name = entity_config["target_schema_name"]
     target_table_name = entity_config["target_table_name"]
@@ -139,8 +140,15 @@ try:
         business_dt=business_dt
     )
 
+    valid_df_count = valid_df.count()
+    log_step(logger, f"Silver Conformance valid dataframe count | entity_name={entity_name} | valid_df_count={valid_df_count}")
+
+    rejected_df_count = rejected_df.count()
+    log_step(logger, f"Silver Conformance valid dataframe count | entity_name={entity_name} | rejected_df_count={rejected_df}")
+
     log_step(logger, f"Writing Silver Conformance rejected records | entity_name={entity_name}")
     rejected_count = write_conformance_rejected_records(rejected_df, catalog_name)
+    log_step(logger, f"Silver Conformance rejected count | entity_name={entity_name} | rejected_count={rejected_count}")
 
     log_step(logger, f"Applying SCD2 merge statement | entity_name={entity_name}")
     records_written = apply_scd2_merge(
@@ -196,8 +204,3 @@ finally:
     close_logger(logger)
 
 dbutils.notebook.exit(message)
-
-# COMMAND ----------
-
-display(dq_results)
-
