@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_customer_scd2 (
     own_car_flag STRING COMMENT 'Car ownership flag',
     own_realty_flag STRING COMMENT 'Real estate ownership flag',
     children_count INT COMMENT 'Number of children',
-    family_members_count DECIMAL(10,2) COMMENT 'Number of family members',
+    family_members_count INT COMMENT 'Number of family members',
 
     income_total DECIMAL(18,2) COMMENT 'Total customer income',
     income_type STRING COMMENT 'Customer income type',
@@ -40,7 +40,10 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_customer_scd2 (
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
     updated_timestamp TIMESTAMP COMMENT 'Record update timestamp',
-    created_date DATE COMMENT 'Technical record creation date'
+    created_date DATE COMMENT 'Technical record creation date',
+    source_file_name string,
+    source_file_path string,
+    standardization_timestamp timestamp
 )
 USING DELTA
 PARTITIONED BY (business_dt)
@@ -82,6 +85,9 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_loan_application (
     credit_income_ratio DECIMAL(18,6) COMMENT 'Credit amount divided by income total',
     annuity_income_ratio DECIMAL(18,6) COMMENT 'Annuity amount divided by income total',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     record_hash STRING COMMENT 'Hash of conformed application business attributes',
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
@@ -126,6 +132,9 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_bureau_credit (
     has_overdue BOOLEAN COMMENT 'Derived overdue indicator',
     debt_to_credit_ratio DECIMAL(18,6) COMMENT 'Debt amount divided by credit amount',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     record_hash STRING COMMENT 'Hash of bureau credit business attributes',
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
@@ -181,6 +190,9 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_previous_application
     approval_credit_ratio DECIMAL(18,6) COMMENT 'Credit amount divided by application amount',
     down_payment_ratio DECIMAL(18,6) COMMENT 'Down payment divided by goods price',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     record_hash STRING COMMENT 'Hash of previous application business attributes',
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
@@ -212,7 +224,7 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_credit_card_balance 
     drawing_amount_current DECIMAL(18,2) COMMENT 'Current drawing amount',
     drawing_amount_atm_current DECIMAL(18,2) COMMENT 'Current ATM drawing amount',
     drawing_amount_pos_current DECIMAL(18,2) COMMENT 'Current POS drawing amount',
-    installment_mature_cumulative DECIMAL(18,2) COMMENT 'Cumulative matured installments',
+    installment_mature_cumulative INT COMMENT 'Cumulative matured installments',
     payment_amount_current DECIMAL(18,2) COMMENT 'Current payment amount',
     payment_total_current DECIMAL(18,2) COMMENT 'Total current payment amount',
     receivable_principal_amount DECIMAL(18,2) COMMENT 'Receivable principal amount',
@@ -227,11 +239,16 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_credit_card_balance 
     has_default_dpd BOOLEAN COMMENT 'Default DPD indicator',
     is_active_contract BOOLEAN COMMENT 'Active contract indicator',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Technical record creation date'
+    created_date DATE COMMENT 'Technical record creation date',
+    updated_timestamp timestamp,
+    record_hash string
 )
 USING DELTA
 PARTITIONED BY (business_dt)
@@ -262,11 +279,16 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_installment_payment 
     is_late_payment BOOLEAN COMMENT 'Late payment indicator',
     is_underpayment BOOLEAN COMMENT 'Underpayment indicator',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Technical record creation date'
+    created_date DATE COMMENT 'Technical record creation date',
+    updated_timestamp timestamp,
+    record_hash string  
 )
 USING DELTA
 PARTITIONED BY (business_dt)
@@ -297,11 +319,16 @@ CREATE TABLE IF NOT EXISTS credit_risk_dev.silver.conformed_pos_cash_balance (
     is_active_contract BOOLEAN COMMENT 'Active contract indicator',
     remaining_installment_ratio DECIMAL(18,6) COMMENT 'Future installments divided by total installments',
 
+	source_file_name string,
+	source_file_path string,
+	standardization_timestamp timestamp,
     business_dt DATE COMMENT 'Business/snapshot date represented by this conformance batch',
     source_system STRING COMMENT 'Source system identifier',
     pipeline_run_id STRING COMMENT 'Pipeline run identifier',
     created_timestamp TIMESTAMP COMMENT 'Record creation timestamp',
-    created_date DATE COMMENT 'Technical record creation date'
+    created_date DATE COMMENT 'Technical record creation date',
+    updated_timestamp timestamp,
+    record_hash string
 )
 USING DELTA
 PARTITIONED BY (business_dt)
