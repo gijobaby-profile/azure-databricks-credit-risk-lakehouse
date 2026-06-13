@@ -9,7 +9,16 @@ Delete from credit_risk_dev.bronze.application_train where business_dt is null;
 
 -- COMMAND ----------
 
-select *
+select distinct rule_id , target_table_name FROM credit_risk_dev.dq.data_quality_rules
+
+-- COMMAND ----------
+
+select *  FROM credit_risk_dev.dq.data_quality_rules
+WHERE target_catalog_name = 'credit_risk_dev'
+  AND target_schema_name = 'silver'
+  AND target_table_name LIKE 'conformed_%'
+  AND rule_id not like '%_CUST_%';
+
 
 
 -- COMMAND ----------
@@ -134,6 +143,10 @@ select * from credit_risk_dev.dq.rejected_records where source_file_name='bureau
 -- COMMAND ----------
 
 truncate table credit_risk_dev.bronze.bureau_balance
+
+-- COMMAND ----------
+
+select * from  credit_risk_dev.dq.data_quality_rules
 
 -- COMMAND ----------
 
