@@ -465,8 +465,21 @@ This repository is actively evolving as a portfolio-grade banking data engineeri
 Gold-layer analytics and model-ready feature engineering are planned as future extensions.
 
 ---
+## 17. Repository Structure
 
-## 17. Author
+```text
+.github/workflows/   - GitHub Actions CI/CD workflows
+adf/                 - Azure Data Factory pipelines, datasets, linked services and triggers
+config/              - Environment and project-level configuration
+docs/                - Architecture and implementation documentation
+notebooks/           - Databricks notebooks organized by lakehouse layer
+resources/           - Databricks Asset Bundle resource definitions
+sql/                 - DDL, metadata inserts, audit and orchestration SQL scripts
+src/                 - Reusable Python/PySpark modules
+databricks.yml       - Databricks Asset Bundle root configuration
+```
+
+## 18. Author
 
 **Gijo Baby**  
 Senior Data Engineer  
