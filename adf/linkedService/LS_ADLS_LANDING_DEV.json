@@ -1,0 +1,10 @@
+{
+	"name": "LS_ADLS_LANDING_DEV",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stcrlandingdevuks001.dfs.core.windows.net/"
+		}
+	}
+}

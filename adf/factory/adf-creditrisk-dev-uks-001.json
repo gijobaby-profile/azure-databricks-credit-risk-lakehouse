@@ -1,0 +1,15 @@
+{
+	"name": "adf-creditrisk-dev-uks-001",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "42517487-54e7-4663-b20b-edf0f4f256dd",
+		"tenantId": "0ed0beff-69ba-4422-a7d7-072d950819ac"
+	}
+}
