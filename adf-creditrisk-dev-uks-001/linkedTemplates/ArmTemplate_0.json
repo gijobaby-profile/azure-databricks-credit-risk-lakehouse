@@ -18,6 +18,14 @@
 		"LS_ADLS_LANDING_DEV_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://stcrlandingdevuks001.dfs.core.windows.net/"
+		},
+		"LS_KEYVAULT_DEV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-creditrisk-dev-uks-01.vault.azure.net/"
+		},
+		"LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0511-180517-1zf1i1a8"
 		}
 	},
 	"variables": {
@@ -64,6 +72,19 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_KEYVAULT_DEV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('LS_KEYVAULT_DEV_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DS_ADLS_LANDING_BINARY')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -99,6 +120,30 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_LANDING_DEV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_AZDBRICKS_DEV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405616233234267.7.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "LS_KEYVAULT_DEV",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "sec-dbx-adf-sp-token"
+					},
+					"existingClusterId": "[parameters('LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_KEYVAULT_DEV')]"
 			]
 		}
 	]

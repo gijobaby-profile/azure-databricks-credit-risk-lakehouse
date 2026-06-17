@@ -19,6 +19,14 @@
 			"type": "string",
 			"defaultValue": "https://stcrlandingdevuks001.dfs.core.windows.net/"
 		},
+		"LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0511-180517-1zf1i1a8"
+		},
+		"LS_KEYVAULT_DEV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-creditrisk-dev-uks-01.vault.azure.net/"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -54,6 +62,12 @@
 					},
 					"LS_ADLS_LANDING_DEV_properties_typeProperties_url": {
 						"value": "[parameters('LS_ADLS_LANDING_DEV_properties_typeProperties_url')]"
+					},
+					"LS_KEYVAULT_DEV_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LS_KEYVAULT_DEV_properties_typeProperties_baseUrl')]"
+					},
+					"LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId')]"
 					}
 				}
 			},

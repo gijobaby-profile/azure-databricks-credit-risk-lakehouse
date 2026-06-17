@@ -13,6 +13,12 @@
 		},
 		"LS_ADLS_LANDING_DEV_properties_typeProperties_url": {
 			"value": "https://stcrlandingdevuks001.dfs.core.windows.net/"
+		},
+		"LS_AZDBRICKS_DEV_properties_typeProperties_existingClusterId": {
+			"value": "0511-180517-1zf1i1a8"
+		},
+		"LS_KEYVAULT_DEV_properties_typeProperties_baseUrl": {
+			"value": "https://kv-creditrisk-dev-uks-01.vault.azure.net/"
 		}
 	}
 }
