@@ -7,6 +7,14 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adf-creditrisk-dev-uks-001"
 		},
+		"LS_ADLS_CURATED_DEV_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://stcrcurateddevuks001.dfs.core.windows.net/"
+		},
+		"LS_ADLS_GOLD_DEV_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://stcrgolddevuks001.dfs.core.windows.net/"
+		},
 		"LS_ADLS_LANDING_DEV_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://stcrlandingdevuks001.dfs.core.windows.net/"
@@ -16,6 +24,32 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS_CURATED_DEV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_CURATED_DEV_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS_GOLD_DEV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_GOLD_DEV_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_ADLS_LANDING_DEV')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",

@@ -5,6 +5,12 @@
 		"factoryName": {
 			"value": "adf-creditrisk-dev-uks-001"
 		},
+		"LS_ADLS_CURATED_DEV_properties_typeProperties_url": {
+			"value": "https://stcrcurateddevuks001.dfs.core.windows.net/"
+		},
+		"LS_ADLS_GOLD_DEV_properties_typeProperties_url": {
+			"value": "https://stcrgolddevuks001.dfs.core.windows.net/"
+		},
 		"LS_ADLS_LANDING_DEV_properties_typeProperties_url": {
 			"value": "https://stcrlandingdevuks001.dfs.core.windows.net/"
 		},
