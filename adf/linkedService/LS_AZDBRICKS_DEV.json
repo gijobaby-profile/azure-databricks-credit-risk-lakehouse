@@ -1,0 +1,19 @@
+{
+	"name": "LS_AZDBRICKS_DEV",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-7405616233234267.7.azuredatabricks.net",
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KEYVAULT_DEV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sec-dbx-adf-sp-token"
+			},
+			"existingClusterId": "0511-180517-1zf1i1a8"
+		}
+	}
+}
