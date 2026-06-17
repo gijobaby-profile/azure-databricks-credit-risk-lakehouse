@@ -1,0 +1,10 @@
+{
+	"name": "LS_ADLS_GOLD_DEV",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stcrgolddevuks001.dfs.core.windows.net/"
+		}
+	}
+}
