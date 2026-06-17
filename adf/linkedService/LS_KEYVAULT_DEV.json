@@ -1,0 +1,10 @@
+{
+	"name": "LS_KEYVAULT_DEV",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://kv-creditrisk-dev-uks-01.vault.azure.net/"
+		}
+	}
+}
