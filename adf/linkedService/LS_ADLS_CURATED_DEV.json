@@ -1,0 +1,10 @@
+{
+	"name": "LS_ADLS_CURATED_DEV",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stcrcurateddevuks001.dfs.core.windows.net/"
+		}
+	}
+}
