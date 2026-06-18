@@ -42,10 +42,16 @@
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"p_folder_path": {
+					"p_file_name": {
 						"type": "string"
 					},
-					"p_file_name": {
+					"p_source_system": {
+						"type": "string"
+					},
+					"p_entity_name": {
+						"type": "string"
+					},
+					"p_business_dt": {
 						"type": "string"
 					}
 				},
@@ -59,7 +65,138 @@
 							"type": "Expression"
 						},
 						"folderPath": {
-							"value": "@dataset().p_folder_path",
+							"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_LANDING_DEV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_LANDING_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_LANDING_DEV",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_file_name": {
+						"type": "string"
+					},
+					"p_source_system": {
+						"type": "string"
+					},
+					"p_entity_name": {
+						"type": "string"
+					},
+					"p_business_dt": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().p_file_name",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_LANDING_DEV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_LANDING_FOLDER')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_LANDING_DEV",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_source_system": {
+						"type": "string"
+					},
+					"p_entity_name": {
+						"type": "string"
+					},
+					"p_business_dt": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+							"type": "Expression"
+						},
+						"fileSystem": "landing"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_LANDING_DEV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_SUCCESS_MARKER')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_LANDING_DEV",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_marker_file_name": {
+						"type": "string",
+						"defaultValue": "_SUCCESS"
+					},
+					"p_source_system": {
+						"type": "string"
+					},
+					"p_entity_name": {
+						"type": "string"
+					},
+					"p_business_dt": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().p_marker_file_name",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
 							"type": "Expression"
 						},
 						"fileSystem": "landing"
