@@ -1,5 +1,5 @@
 {
-	"name": "DS_ADLS_LANDING_BINARY",
+	"name": "DS_ADLS_LANDING_CSV",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ADLS_LANDING_DEV",
@@ -20,7 +20,7 @@
 			}
 		},
 		"annotations": [],
-		"type": "Binary",
+		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
@@ -28,9 +28,17 @@
 					"value": "@dataset().p_file_name",
 					"type": "Expression"
 				},
-				"folderPath": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+				"folderPath": {
+					"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+					"type": "Expression"
+				},
 				"fileSystem": "landing"
-			}
-		}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
 	}
 }

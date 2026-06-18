@@ -1,13 +1,14 @@
 {
-	"name": "DS_ADLS_LANDING_BINARY",
+	"name": "DS_ADLS_SUCCESS_MARKER",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_ADLS_LANDING_DEV",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"p_file_name": {
-				"type": "string"
+			"p_marker_file_name": {
+				"type": "string",
+				"defaultValue": "_SUCCESS"
 			},
 			"p_source_system": {
 				"type": "string"
@@ -25,10 +26,13 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@dataset().p_file_name",
+					"value": "@dataset().p_marker_file_name",
 					"type": "Expression"
 				},
-				"folderPath": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+				"folderPath": {
+					"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
+					"type": "Expression"
+				},
 				"fileSystem": "landing"
 			}
 		}
