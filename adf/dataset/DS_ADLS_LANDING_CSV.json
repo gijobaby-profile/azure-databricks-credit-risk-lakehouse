@@ -6,10 +6,16 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"p_directory": {
+			"p_file_name": {
 				"type": "string"
 			},
-			"p_file_name": {
+			"p_source_system": {
+				"type": "string"
+			},
+			"p_entity_name": {
+				"type": "string"
+			},
+			"p_business_dt": {
 				"type": "string"
 			}
 		},
@@ -23,7 +29,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@dataset().p_directory",
+					"value": "@concat(dataset().p_source_system, '/', dataset().p_entity_name, '/', dataset().p_business_dt)",
 					"type": "Expression"
 				},
 				"fileSystem": "landing"
