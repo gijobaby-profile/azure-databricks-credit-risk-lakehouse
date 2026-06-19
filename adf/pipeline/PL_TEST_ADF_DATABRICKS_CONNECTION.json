@@ -192,6 +192,26 @@
 									"business_dt": {
 										"value": "@pipeline().parameters.p_business_dt",
 										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"force_reload": {
+										"value": "@pipeline().parameters.p_force_reload",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"write_mode": {
+										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
 									}
 								}
 							},
@@ -224,6 +244,18 @@
 			"p_marker_file_name": {
 				"type": "string",
 				"defaultValue": "application_train.csv_SUCCESS"
+			},
+			"p_write_mode": {
+				"type": "string",
+				"defaultValue": "overwrite"
+			},
+			"p_force_reload": {
+				"type": "string",
+				"defaultValue": "false"
+			},
+			"p_catalog_name": {
+				"type": "string",
+				"defaultValue": "credit_risk_dev"
 			}
 		},
 		"annotations": []
