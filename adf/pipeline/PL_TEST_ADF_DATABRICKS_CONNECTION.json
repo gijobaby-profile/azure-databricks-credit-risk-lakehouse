@@ -1,0 +1,278 @@
+{
+	"name": "PL_TEST_ADF_DATABRICKS_CONNECTION",
+	"properties": {
+		"activities": [
+			{
+				"name": "GM_CHECK_LANDING_FOLDER",
+				"description": "To confirm that the landing folder exists:",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_LANDING_FOLDER",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_source_system": {
+								"value": "@pipeline().parameters.p_source_system",
+								"type": "Expression"
+							},
+							"p_entity_name": {
+								"value": "@pipeline().parameters.p_entity_name",
+								"type": "Expression"
+							},
+							"p_business_dt": {
+								"value": "@pipeline().parameters.p_business_dt",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists",
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "GM_CHECK_SUCCESS_MARKER",
+				"description": "To confirm that the marker file exists",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "GM_CHECK_SOURCE_FILE",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_SUCCESS_MARKER",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_marker_file_name": {
+								"value": "@concat(pipeline().parameters.p_file_name,'_SUCCESS')",
+								"type": "Expression"
+							},
+							"p_source_system": {
+								"value": "@pipeline().parameters.p_source_system",
+								"type": "Expression"
+							},
+							"p_entity_name": {
+								"value": "@pipeline().parameters.p_entity_name",
+								"type": "Expression"
+							},
+							"p_business_dt": {
+								"value": "@pipeline().parameters.p_business_dt",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "GM_CHECK_SOURCE_FILE",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "GM_CHECK_LANDING_FOLDER",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_LANDING_BINARY",
+						"type": "DatasetReference",
+						"parameters": {
+							"p_file_name": {
+								"value": "@pipeline().parameters.p_file_name",
+								"type": "Expression"
+							},
+							"p_source_system": {
+								"value": "@pipeline().parameters.p_source_system",
+								"type": "Expression"
+							},
+							"p_entity_name": {
+								"value": "@pipeline().parameters.p_entity_name",
+								"type": "Expression"
+							},
+							"p_business_dt": {
+								"value": "@pipeline().parameters.p_business_dt",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "IF_FILE_READY",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "GM_CHECK_SUCCESS_MARKER",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(\n    activity('GM_CHECK_SOURCE_FILE').output.exists,\n    activity('GM_CHECK_SUCCESS_MARKER').output.exists\n)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Fail1",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@if(\r\n    equals(activity('GM_CHECK_SOURCE_FILE').output.exists, false),\r\n    concat(\r\n        'SOURCE FILE MISSING: Source file is not available. ',\r\n        'Entity=', pipeline().parameters.p_entity_name,\r\n        ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n        ', FileName=', pipeline().parameters.p_file_name\r\n    ),\r\n    if(\r\n        equals(activity('GM_CHECK_SUCCESS_MARKER').output.exists, false),\r\n        concat(\r\n            'SUCCESS MARKER MISSING: Success marker file is not available. ',\r\n            'Entity=', pipeline().parameters.p_entity_name,\r\n            ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n            ', ExpectedMarker=', pipeline().parameters.p_file_name, '_SUCCESS'\r\n        ),\r\n        concat(\r\n            'FILE READINESS CHECK FAILED: Unknown readiness issue. ',\r\n            'Entity=', pipeline().parameters.p_entity_name,\r\n            ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n            ', FileName=', pipeline().parameters.p_file_name\r\n        )\r\n    )\r\n)",
+									"type": "Expression"
+								},
+								"errorCode": "FILE_NOT_READY"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION",
+							"type": "DatabricksJob",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"jobId": "1009500841495816",
+								"jobParameters": {
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"force_reload": {
+										"value": "@pipeline().parameters.p_force_reload",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"write_mode": {
+										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_source_system": {
+				"type": "string",
+				"defaultValue": "home_credit"
+			},
+			"p_entity_name": {
+				"type": "string",
+				"defaultValue": "application_train"
+			},
+			"p_business_dt": {
+				"type": "string",
+				"defaultValue": "2026-06-02"
+			},
+			"p_file_name": {
+				"type": "string",
+				"defaultValue": "application_train.csv"
+			},
+			"p_marker_file_name": {
+				"type": "string",
+				"defaultValue": "application_train.csv_SUCCESS"
+			},
+			"p_write_mode": {
+				"type": "string",
+				"defaultValue": "overwrite"
+			},
+			"p_force_reload": {
+				"type": "string",
+				"defaultValue": "false"
+			},
+			"p_catalog_name": {
+				"type": "string",
+				"defaultValue": "credit_risk_dev"
+			}
+		},
+		"annotations": []
+	}
+}
