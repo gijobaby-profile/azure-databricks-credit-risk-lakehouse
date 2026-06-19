@@ -175,12 +175,16 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Wait1",
-							"type": "Wait",
+							"name": "Fail1",
+							"type": "Fail",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
-								"waitTimeInSeconds": 60
+								"message": {
+									"value": "@if(\r\n    equals(activity('GM_CHECK_SOURCE_FILE').output.exists, false),\r\n    concat(\r\n        'SOURCE FILE MISSING: Source file is not available. ',\r\n        'Entity=', pipeline().parameters.p_entity_name,\r\n        ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n        ', FileName=', pipeline().parameters.p_file_name\r\n    ),\r\n    if(\r\n        equals(activity('GM_CHECK_SUCCESS_MARKER').output.exists, false),\r\n        concat(\r\n            'SUCCESS MARKER MISSING: Success marker file is not available. ',\r\n            'Entity=', pipeline().parameters.p_entity_name,\r\n            ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n            ', ExpectedMarker=', pipeline().parameters.p_file_name, '_SUCCESS'\r\n        ),\r\n        concat(\r\n            'FILE READINESS CHECK FAILED: Unknown readiness issue. ',\r\n            'Entity=', pipeline().parameters.p_entity_name,\r\n            ', BusinessDate=', pipeline().parameters.p_business_dt,\r\n            ', FileName=', pipeline().parameters.p_file_name\r\n        )\r\n    )\r\n)",
+									"type": "Expression"
+								},
+								"errorCode": "FILE_NOT_READY"
 							}
 						}
 					],
