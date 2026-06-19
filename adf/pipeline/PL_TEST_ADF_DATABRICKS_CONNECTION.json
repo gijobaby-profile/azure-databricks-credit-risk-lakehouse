@@ -173,6 +173,17 @@
 						"value": "@and(\n    activity('GM_CHECK_SOURCE_FILE').output.exists,\n    activity('GM_CHECK_SUCCESS_MARKER').output.exists\n)",
 						"type": "Expression"
 					},
+					"ifFalseActivities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 60
+							}
+						}
+					],
 					"ifTrueActivities": [
 						{
 							"name": "JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION",
