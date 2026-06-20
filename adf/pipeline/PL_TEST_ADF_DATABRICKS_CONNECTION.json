@@ -29,7 +29,7 @@
 								"type": "Expression"
 							},
 							"p_business_dt": {
-								"value": "@pipeline().parameters.p_business_dt",
+								"value": "@replace(pipeline().parameters.p_business_dt,'-','')",
 								"type": "Expression"
 							}
 						}
@@ -86,7 +86,7 @@
 								"type": "Expression"
 							},
 							"p_business_dt": {
-								"value": "@pipeline().parameters.p_business_dt",
+								"value": "@replace(pipeline().parameters.p_business_dt,'-' ,'')",
 								"type": "Expression"
 							}
 						}
@@ -141,7 +141,7 @@
 								"type": "Expression"
 							},
 							"p_business_dt": {
-								"value": "@pipeline().parameters.p_business_dt",
+								"value": "@replace(pipeline().parameters.p_business_dt,'-' ,'')",
 								"type": "Expression"
 							}
 						}
