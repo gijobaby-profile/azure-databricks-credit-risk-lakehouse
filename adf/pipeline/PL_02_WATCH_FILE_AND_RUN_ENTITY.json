@@ -6,70 +6,91 @@
 				"type": "string"
 			},
 			"p_business_dt": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "2026-06-02"
 			},
 			"p_business_dt_token": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "20260602"
 			},
 			"p_environment": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "dev"
 			},
 			"p_catalog_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "credit_risk_dev"
 			},
 			"p_source_system": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "home_credit"
 			},
 			"p_file_id": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "FILE_HOME_CREDIT_APPLICATION_TRAIN"
 			},
 			"p_entity_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "application_train"
 			},
 			"p_file_pattern_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "application_train_files"
 			},
 			"p_source_folder_path": {
 				"type": "string"
 			},
 			"p_data_file_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "application_train.csv"
 			},
 			"p_success_file_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "application_train.csv.SUCCESS"
 			},
 			"p_mandatory_flag": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "true"
 			},
 			"p_success_file_required_flag": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "true"
 			},
 			"p_polling_interval_minutes": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "5"
 			},
 			"p_max_poll_count": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "24"
 			},
 			"p_min_expected_file_count": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "1"
 			},
 			"p_max_expected_file_count": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "1"
 			},
 			"p_bronze_silver_job_name": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION"
 			},
 			"p_force_reload": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "false"
 			},
 			"p_write_mode": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "overwrite"
 			},
 			"p_run_type": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "SCHEDULED"
 			},
 			"p_run_scope": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "FULL"
 			}
 		},
 		"variables": {
