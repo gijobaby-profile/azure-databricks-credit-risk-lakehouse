@@ -1,5 +1,5 @@
 {
-	"name": "PL_ORCH_CREDITRISK_MAIN",
+	"name": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
 	"properties": {
 		"parameters": {
 			"p_environment": {
@@ -37,6 +37,77 @@
 			"p_debug_mode": {
 				"type": "string",
 				"defaultValue": "false"
+			}
+		},
+		"variables": {
+			"p_pipeline_run_id": {
+				"type": "String"
+			},
+			"p_business_dt": {
+				"type": "String"
+			},
+			"p_business_dt_token": {
+				"type": "String"
+			},
+			"p_environment": {
+				"type": "String"
+			},
+			"p_catalog_name": {
+				"type": "String"
+			},
+			"p_source_system": {
+				"type": "String"
+			},
+			"p_file_id": {
+				"type": "String"
+			},
+			"p_entity_name": {
+				"type": "String"
+			},
+			"p_file_pattern_name": {
+				"type": "String"
+			},
+			"p_source_folder_path": {
+				"type": "String"
+			},
+			"p_data_file_name": {
+				"type": "String"
+			},
+			"p_success_file_name": {
+				"type": "String"
+			},
+			"p_mandatory_flag": {
+				"type": "String"
+			},
+			"p_success_file_required_flag": {
+				"type": "String"
+			},
+			"p_polling_interval_minutes": {
+				"type": "String"
+			},
+			"p_max_poll_count": {
+				"type": "String"
+			},
+			"p_min_expected_file_count": {
+				"type": "String"
+			},
+			"p_max_expected_file_count": {
+				"type": "String"
+			},
+			"p_bronze_silver_job_name": {
+				"type": "String"
+			},
+			"p_force_reload": {
+				"type": "String"
+			},
+			"p_write_mode": {
+				"type": "String"
+			},
+			"p_run_type": {
+				"type": "String"
+			},
+			"p_run_scope": {
+				"type": "String"
 			}
 		},
 		"annotations": []
