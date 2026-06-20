@@ -1,0 +1,248 @@
+-- Databricks notebook source
+-- =====================================================================
+-- Module      : ADF Orchestration Dependency Rules
+-- File        : 03_insert_dependency_rules.sql
+-- Purpose     : Insert dependency rules so that Silver Conformance and Gold
+--               start only after required predecessor layers succeed.
+-- =====================================================================
+
+-- COMMAND ----------
+
+DELETE FROM credit_risk_dev.orchestration.dependency_rule_metadata;
+
+-- COMMAND ----------
+
+INSERT INTO credit_risk_dev.orchestration.dependency_rule_metadata
+(
+    dependency_rule_id,
+    target_layer_name,
+    target_process_name,
+    target_entity_name,
+    required_layer_name,
+    required_entity_name,
+    required_file_pattern_name,
+    required_status,
+    mandatory_flag,
+    active_flag,
+    created_timestamp,
+    updated_timestamp
+)
+VALUES
+-- ---------------------------------------------------------------------
+-- Silver Conformance waits for Silver Standardization
+-- ---------------------------------------------------------------------
+(
+    'DEP_SC_CUSTOMER_SCD_APPLICATION_TRAIN',
+    'SILVER_CONFORMANCE',
+    'customer_scd2',
+    'customer',
+    'SILVER_STANDARDIZATION',
+    'application_train',
+    'application_train_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_LOAN_APPLICATION_APPLICATION_TRAIN',
+    'SILVER_CONFORMANCE',
+    'conformed_loan_application',
+    'loan_application',
+    'SILVER_STANDARDIZATION',
+    'application_train',
+    'application_train_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_LOAN_APPLICATION_APPLICATION_TEST',
+    'SILVER_CONFORMANCE',
+    'conformed_loan_application',
+    'loan_application',
+    'SILVER_STANDARDIZATION',
+    'application_test',
+    'application_test_files',
+    'SUCCESS',
+    false,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_BUREAU_CREDIT_BUREAU',
+    'SILVER_CONFORMANCE',
+    'conformed_bureau_credit',
+    'bureau_credit',
+    'SILVER_STANDARDIZATION',
+    'bureau',
+    'bureau_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_BUREAU_CREDIT_BUREAU_BALANCE',
+    'SILVER_CONFORMANCE',
+    'conformed_bureau_credit',
+    'bureau_credit',
+    'SILVER_STANDARDIZATION',
+    'bureau_balance',
+    'bureau_balance_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_PREVIOUS_APPLICATION',
+    'SILVER_CONFORMANCE',
+    'conformed_previous_application',
+    'previous_application',
+    'SILVER_STANDARDIZATION',
+    'previous_application',
+    'previous_application_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_INSTALLMENT_PAYMENT',
+    'SILVER_CONFORMANCE',
+    'conformed_installment_payment',
+    'installment_payment',
+    'SILVER_STANDARDIZATION',
+    'installments_payments',
+    'installments_payments_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_CREDIT_CARD_BALANCE',
+    'SILVER_CONFORMANCE',
+    'conformed_credit_card_balance',
+    'credit_card_balance',
+    'SILVER_STANDARDIZATION',
+    'credit_card_balance',
+    'credit_card_balance_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_SC_POS_CASH_BALANCE',
+    'SILVER_CONFORMANCE',
+    'conformed_pos_cash_balance',
+    'pos_cash_balance',
+    'SILVER_STANDARDIZATION',
+    'POS_CASH_balance',
+    'pos_cash_balance_files',
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+
+-- ---------------------------------------------------------------------
+-- Gold waits for Silver Conformance
+-- ---------------------------------------------------------------------
+(
+    'DEP_GOLD_RISK_MART_CUSTOMER',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'customer',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_GOLD_RISK_MART_LOAN_APPLICATION',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'loan_application',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_GOLD_RISK_MART_BUREAU_CREDIT',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'bureau_credit',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_GOLD_RISK_MART_INSTALLMENT_PAYMENT',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'installment_payment',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_GOLD_RISK_MART_CREDIT_CARD_BALANCE',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'credit_card_balance',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+),
+(
+    'DEP_GOLD_RISK_MART_POS_CASH_BALANCE',
+    'GOLD',
+    'gold_risk_mart',
+    'customer_risk_snapshot',
+    'SILVER_CONFORMANCE',
+    'pos_cash_balance',
+    NULL,
+    'SUCCESS',
+    true,
+    true,
+    current_timestamp(),
+    current_timestamp()
+);
+
