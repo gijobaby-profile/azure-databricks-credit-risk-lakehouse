@@ -1,0 +1,44 @@
+{
+	"name": "PL_ORCH_CREDITRISK_MAIN",
+	"properties": {
+		"parameters": {
+			"p_environment": {
+				"type": "string",
+				"defaultValue": "dev"
+			},
+			"p_source_system": {
+				"type": "string",
+				"defaultValue": "home_credit"
+			},
+			"p_business_dt": {
+				"type": "string"
+			},
+			"p_run_type": {
+				"type": "string",
+				"defaultValue": "SCHEDULED"
+			},
+			"p_run_scope": {
+				"type": "string",
+				"defaultValue": "FULL"
+			},
+			"p_entity_name": {
+				"type": "string"
+			},
+			"p_file_name": {
+				"type": "string"
+			},
+			"p_marker_file_name": {
+				"type": "string"
+			},
+			"p_force_reload": {
+				"type": "string",
+				"defaultValue": "false"
+			},
+			"p_debug_mode": {
+				"type": "string",
+				"defaultValue": "false"
+			}
+		},
+		"annotations": []
+	}
+}
