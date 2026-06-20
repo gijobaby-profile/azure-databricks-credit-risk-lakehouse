@@ -2,41 +2,74 @@
 	"name": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
 	"properties": {
 		"parameters": {
-			"p_environment": {
-				"type": "string",
-				"defaultValue": "dev"
-			},
-			"p_source_system": {
-				"type": "string",
-				"defaultValue": "home_credit"
+			"p_pipeline_run_id": {
+				"type": "string"
 			},
 			"p_business_dt": {
 				"type": "string"
 			},
-			"p_run_type": {
-				"type": "string",
-				"defaultValue": "SCHEDULED"
+			"p_business_dt_token": {
+				"type": "string"
 			},
-			"p_run_scope": {
-				"type": "string",
-				"defaultValue": "FULL"
+			"p_environment": {
+				"type": "string"
+			},
+			"p_catalog_name": {
+				"type": "string"
+			},
+			"p_source_system": {
+				"type": "string"
+			},
+			"p_file_id": {
+				"type": "string"
 			},
 			"p_entity_name": {
 				"type": "string"
 			},
-			"p_file_name": {
+			"p_file_pattern_name": {
 				"type": "string"
 			},
-			"p_marker_file_name": {
+			"p_source_folder_path": {
+				"type": "string"
+			},
+			"p_data_file_name": {
+				"type": "string"
+			},
+			"p_success_file_name": {
+				"type": "string"
+			},
+			"p_mandatory_flag": {
+				"type": "string"
+			},
+			"p_success_file_required_flag": {
+				"type": "string"
+			},
+			"p_polling_interval_minutes": {
+				"type": "string"
+			},
+			"p_max_poll_count": {
+				"type": "string"
+			},
+			"p_min_expected_file_count": {
+				"type": "string"
+			},
+			"p_max_expected_file_count": {
+				"type": "string"
+			},
+			"p_bronze_silver_job_name": {
 				"type": "string"
 			},
 			"p_force_reload": {
-				"type": "string",
-				"defaultValue": "false"
+				"type": "string"
 			},
-			"p_debug_mode": {
-				"type": "string",
-				"defaultValue": "false"
+			"p_write_mode": {
+				"type": "string"
+			},
+			"p_run_type": {
+				"type": "string"
+			},
+			"p_run_scope": {
+				"type": "string"
 			}
 		},
 		"variables": {
