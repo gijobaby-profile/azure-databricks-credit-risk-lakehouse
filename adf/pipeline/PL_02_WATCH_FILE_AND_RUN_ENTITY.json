@@ -92,7 +92,13 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "DS_ADLS_LANDING_FOLDER",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"p_source_system": {
+											"value": "@pipeline().parameters.p_source_system",
+											"type": "Expression"
+										}
+									}
 								},
 								"fieldList": [
 									"childItems"
