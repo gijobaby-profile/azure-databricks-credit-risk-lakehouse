@@ -16,7 +16,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/99_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
 					"baseParameters": {
 						"operation_type": "UPDATE_FILE_WAITING",
 						"pipeline_run_id": {
@@ -96,6 +96,14 @@
 									"parameters": {
 										"p_source_system": {
 											"value": "@pipeline().parameters.p_source_system",
+											"type": "Expression"
+										},
+										"p_entity_name": {
+											"value": "@pipeline().parameters.p_entity_name",
+											"type": "Expression"
+										},
+										"p_business_dt": {
+											"value": "@pipeline().parameters.p_business_dt",
 											"type": "Expression"
 										}
 									}
@@ -374,7 +382,7 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/99_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+											"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
 											"baseParameters": {
 												"operation_type": "UPDATE_FILE_READY",
 												"pipeline_run_id": {
@@ -449,7 +457,7 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/99_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+											"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
 											"baseParameters": {
 												"operation_type": "INSERT_FILE_ARRIVAL_DETAIL",
 												"pipeline_run_id": {
