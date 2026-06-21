@@ -1,4 +1,12 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
+from src.utils.orchestration_utils import sql_string, sql_date
+
+# COMMAND ----------
+
 dbutils.widgets.text("operation_type", "")
 dbutils.widgets.text("catalog_name", "credit_risk_dev")
 
@@ -58,19 +66,6 @@ layer_processing_status = f"{catalog_name}.orchestration.layer_processing_status
 
 # COMMAND ----------
 
-def HandleNull(v):
-    if v is None or v == "":
-        return "NULL"
-    return "'" + str(v).replace("'", "''") + "'"
-
-
-# COMMAND ----------
-
-def HandleDate(v):
-    return f"DATE({HandleNull(v)})"
-
-# COMMAND ----------
-
 if operation_type == "UPDATE_FILE_WAITING":
 
     spark.sql(f"""
@@ -79,9 +74,9 @@ if operation_type == "UPDATE_FILE_WAITING":
             poll_count = {poll_count},
             last_checked_timestamp = current_timestamp(),
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND file_id = {HandleNull(file_id)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND file_id = {sql_string(file_id)}
     """)
 
 elif operation_type == "UPDATE_FILE_READY":
@@ -97,9 +92,9 @@ elif operation_type == "UPDATE_FILE_READY":
             poll_count = {poll_count},
             last_checked_timestamp = current_timestamp(),
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND file_id = {HandleNull(file_id)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND file_id = {sql_string(file_id)}
     """)
 
 elif operation_type == "UPDATE_FILE_POLLING_STATUS":
@@ -108,7 +103,7 @@ elif operation_type == "UPDATE_FILE_POLLING_STATUS":
 
     spark.sql(f"""
         UPDATE {file_arrival_status}
-        SET arrival_status = {HandleNull(status)},
+        SET arrival_status = {sql_string(status)},
             data_file_arrived_flag = {str(data_file_count > 0).lower()},
             success_file_arrived_flag = {str(success_file_count > 0).lower()},
             matched_data_file_count = {data_file_count},
@@ -119,9 +114,9 @@ elif operation_type == "UPDATE_FILE_POLLING_STATUS":
             poll_count = {poll_count},
             last_checked_timestamp = current_timestamp(),
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND file_id = {HandleNull(file_id)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND file_id = {sql_string(file_id)}
     """)
 
 elif operation_type == "UPDATE_FILE_TIMEOUT_OR_SKIPPED":
@@ -130,14 +125,14 @@ elif operation_type == "UPDATE_FILE_TIMEOUT_OR_SKIPPED":
 
     spark.sql(f"""
         UPDATE {file_arrival_status}
-        SET arrival_status = {HandleNull(status)},
+        SET arrival_status = {sql_string(status)},
             poll_count = {poll_count},
             last_checked_timestamp = current_timestamp(),
-            error_message = {HandleNull(error_message)},
+            error_message = {sql_string(error_message)},
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND file_id = {HandleNull(file_id)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND file_id = {sql_string(file_id)}
     """)
 
 elif operation_type == "INSERT_FILE_ARRIVAL_DETAIL":
@@ -167,18 +162,18 @@ elif operation_type == "INSERT_FILE_ARRIVAL_DETAIL":
         )
         VALUES
         (
-            {HandleDate(business_dt)},
-            {HandleNull(pipeline_run_id)},
-            {HandleNull(file_id)},
-            {HandleNull(source_system)},
-            {HandleNull(entity_name)},
-            {HandleNull(file_pattern_name)},
-            {HandleNull(data_file_name)},
-            {HandleNull(data_file_path)},
+            {sql_date(business_dt)},
+            {sql_string(pipeline_run_id)},
+            {sql_string(file_id)},
+            {sql_string(source_system)},
+            {sql_string(entity_name)},
+            {sql_string(file_pattern_name)},
+            {sql_string(data_file_name)},
+            {sql_string(data_file_path)},
             0,
             NULL,
-            {HandleNull(success_file_name)},
-            {HandleNull(success_file_path)},
+            {sql_string(success_file_name)},
+            {sql_string(success_file_path)},
             true,
             current_timestamp(),
             'READY',
@@ -194,17 +189,17 @@ elif operation_type == "UPDATE_LAYER_RUNNING":
     spark.sql(f"""
         UPDATE {layer_processing_status}
         SET status = 'RUNNING',
-            process_name = {HandleNull(process_name)},
+            process_name = {sql_string(process_name)},
             start_timestamp = current_timestamp(),
             end_timestamp = NULL,
             error_message = NULL,
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND source_system = {HandleNull(source_system)}
-          AND entity_name = {HandleNull(entity_name)}
-          AND file_pattern_name = {HandleNull(file_pattern_name)}
-          AND layer_name = {HandleNull(layer_name)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND source_system = {sql_string(source_system)}
+          AND entity_name = {sql_string(entity_name)}
+          AND file_pattern_name = {sql_string(file_pattern_name)}
+          AND layer_name = {sql_string(layer_name)}
     """)
 
 elif operation_type == "UPDATE_LAYER_SUCCESS":
@@ -215,12 +210,12 @@ elif operation_type == "UPDATE_LAYER_SUCCESS":
             end_timestamp = current_timestamp(),
             error_message = NULL,
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND source_system = {HandleNull(source_system)}
-          AND entity_name = {HandleNull(entity_name)}
-          AND file_pattern_name = {HandleNull(file_pattern_name)}
-          AND layer_name = {HandleNull(layer_name)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND source_system = {sql_string(source_system)}
+          AND entity_name = {sql_string(entity_name)}
+          AND file_pattern_name = {sql_string(file_pattern_name)}
+          AND layer_name = {sql_string(layer_name)}
     """)
 
 elif operation_type == "UPDATE_LAYER_FAILED":
@@ -229,19 +224,18 @@ elif operation_type == "UPDATE_LAYER_FAILED":
         UPDATE {layer_processing_status}
         SET status = 'FAILED',
             end_timestamp = current_timestamp(),
-            error_message = {HandleNull(error_message)},
+            error_message = {sql_string(error_message)},
             updated_timestamp = current_timestamp()
-        WHERE business_dt = {HandleDate(business_dt)}
-          AND pipeline_run_id = {HandleNull(pipeline_run_id)}
-          AND source_system = {HandleNull(source_system)}
-          AND entity_name = {HandleNull(entity_name)}
-          AND file_pattern_name = {HandleNull(file_pattern_name)}
-          AND layer_name = {HandleNull(layer_name)}
+        WHERE business_dt = {sql_date(business_dt)}
+          AND pipeline_run_id = {sql_string(pipeline_run_id)}
+          AND source_system = {sql_string(source_system)}
+          AND entity_name = {sql_string(entity_name)}
+          AND file_pattern_name = {sql_string(file_pattern_name)}
+          AND layer_name = {sql_string(layer_name)}
     """)
 
 else:
     raise ValueError(f"Unsupported operation_type: {operation_type}")
 
 print(f"Completed operation_type={operation_type}, entity={entity_name}, file_id={file_id}")
-
 dbutils.notebook.exit("SUCCESS")
