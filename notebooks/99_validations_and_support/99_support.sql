@@ -3,14 +3,12 @@ select * from credit_risk_dev.orchestration.file_ingestion_metadata
 
 -- COMMAND ----------
 
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='application_train.csv'     where entity_name = 'application_train';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='application_test.csv'      where entity_name = 'application_test';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='bureau.csv'                where entity_name = 'bureau';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='bureau_balance.csv'        where entity_name = 'bureau_balance';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='previous_application.csv'  where entity_name = 'previous_application';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='installments_payments.csv' where entity_name = 'installments_payments';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='credit_card_balance.csv'   where entity_name = 'credit_card_balance';
-update credit_risk_dev.orchestration.file_ingestion_metadata set source_base_path_pattern='landing/home_credit/{entity_name}/{business_dt_token}/',	data_file_name_pattern='POS_CASH_balance.csv'      where entity_name = 'POS_CASH_balance'     ; 
+UPDATE credit_risk_dev.orchestration.file_ingestion_metadata
+SET
+    entity_name = 'pos_cash_balance',
+    data_file_name_pattern = 'pos_cash_balance.csv',
+    file_pattern_name = 'pos_cash_balance_files'
+WHERE file_id = 'FILE_HOME_CREDIT_POS_CASH_BALANCE';
 
 
 -- COMMAND ----------
