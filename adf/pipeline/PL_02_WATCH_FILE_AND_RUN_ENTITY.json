@@ -1,0 +1,1052 @@
+{
+	"name": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
+	"properties": {
+		"description": "Reusable metadata-driven ADLS file watcher for one entity/business_dt; checks data file and .SUCCESS marker, updates UC orchestration status, then runs Databricks Bronze + Silver Standardization.",
+		"activities": [
+			{
+				"name": "DBR_UPDATE_FILE_STATUS_WAITING",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+					"baseParameters": {
+						"operation_type": "UPDATE_FILE_WAITING",
+						"pipeline_run_id": {
+							"value": "@pipeline().parameters.p_pipeline_run_id",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"file_id": {
+							"value": "@pipeline().parameters.p_file_id",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"entity_name": {
+							"value": "@pipeline().parameters.p_entity_name",
+							"type": "Expression"
+						},
+						"file_pattern_name": {
+							"value": "@pipeline().parameters.p_file_pattern_name",
+							"type": "Expression"
+						},
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"environment": {
+							"value": "@pipeline().parameters.p_environment",
+							"type": "Expression"
+						},
+						"arrival_status": "WAITING"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "UNTIL_FILE_READY_OR_TIMEOUT",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "DBR_UPDATE_FILE_STATUS_WAITING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(equals(variables('v_file_ready'), true), greaterOrEquals(variables('v_poll_count'), pipeline().parameters.p_max_poll_count))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "GM_GET_LANDING_FOLDER_ITEMS",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.01:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "DS_ADLS_LANDING_FOLDER",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_source_system": {
+											"value": "@pipeline().parameters.p_source_system",
+											"type": "Expression"
+										},
+										"p_entity_name": {
+											"value": "@pipeline().parameters.p_entity_name",
+											"type": "Expression"
+										},
+										"p_business_dt": {
+											"value": "@pipeline().parameters.p_business_dt",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"childItems"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							}
+						},
+						{
+							"name": "FL_FILTER_DATA_FILE",
+							"type": "Filter",
+							"dependsOn": [
+								{
+									"activity": "GM_GET_LANDING_FOLDER_ITEMS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('GM_GET_LANDING_FOLDER_ITEMS').output.childItems",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@and(equals(item().type, 'File'), equals(item().name, pipeline().parameters.p_data_file_name))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "FL_FILTER_SUCCESS_FILE",
+							"type": "Filter",
+							"dependsOn": [
+								{
+									"activity": "FL_FILTER_DATA_FILE",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('GM_GET_LANDING_FOLDER_ITEMS').output.childItems",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@and(equals(item().type, 'File'), equals(item().name, pipeline().parameters.p_success_file_name))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SET_DATA_FILE_COUNT",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "FL_FILTER_SUCCESS_FILE",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_data_file_count",
+								"value": {
+									"value": "@length(activity('FL_FILTER_DATA_FILE').output.value)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SET_SUCCESS_FILE_COUNT",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SET_DATA_FILE_COUNT",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_success_file_count",
+								"value": {
+									"value": "@length(activity('FL_FILTER_SUCCESS_FILE').output.value)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "IF_FILE_AND_SUCCESS_READY",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "SET_SUCCESS_FILE_COUNT",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@and(greaterOrEquals(variables('v_data_file_count'), pipeline().parameters.p_min_expected_file_count), greaterOrEquals(variables('v_success_file_count'), pipeline().parameters.p_min_expected_file_count))",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "DBR_UPDATE_FILE_STATUS_WAITING_OR_PARTIAL",
+										"type": "DatabricksNotebook",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 1,
+											"retryIntervalInSeconds": 60,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+											"baseParameters": {
+												"operation_type": "UPDATE_FILE_POLLING_STATUS",
+												"pipeline_run_id": {
+													"value": "@pipeline().parameters.p_pipeline_run_id",
+													"type": "Expression"
+												},
+												"business_dt": {
+													"value": "@pipeline().parameters.p_business_dt",
+													"type": "Expression"
+												},
+												"file_id": {
+													"value": "@pipeline().parameters.p_file_id",
+													"type": "Expression"
+												},
+												"source_system": {
+													"value": "@pipeline().parameters.p_source_system",
+													"type": "Expression"
+												},
+												"entity_name": {
+													"value": "@pipeline().parameters.p_entity_name",
+													"type": "Expression"
+												},
+												"file_pattern_name": {
+													"value": "@pipeline().parameters.p_file_pattern_name",
+													"type": "Expression"
+												},
+												"catalog_name": {
+													"value": "@pipeline().parameters.p_catalog_name",
+													"type": "Expression"
+												},
+												"environment": {
+													"value": "@pipeline().parameters.p_environment",
+													"type": "Expression"
+												},
+												"data_file_count": {
+													"value": "@string(variables('v_data_file_count'))",
+													"type": "Expression"
+												},
+												"success_file_count": {
+													"value": "@string(variables('v_success_file_count'))",
+													"type": "Expression"
+												},
+												"poll_count": {
+													"value": "@string(variables('v_poll_count'))",
+													"type": "Expression"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_AZDBRICKS_DEV",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "WAIT_BEFORE_NEXT_POLL",
+										"type": "Wait",
+										"dependsOn": [
+											{
+												"activity": "DBR_UPDATE_FILE_STATUS_WAITING_OR_PARTIAL",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": {
+												"value": "@mul(pipeline().parameters.p_polling_interval_minutes, 60)",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "SET_NEXT_POLL_COUNT",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "WAIT_BEFORE_NEXT_POLL",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "v_next_poll_count",
+											"value": {
+												"value": "@add(variables('v_poll_count'), 1)",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "SET_POLL_COUNT",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "SET_NEXT_POLL_COUNT",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "v_poll_count",
+											"value": {
+												"value": "@variables('v_next_poll_count')",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "DBR_UPDATE_FILE_STATUS_READY",
+										"type": "DatabricksNotebook",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 1,
+											"retryIntervalInSeconds": 60,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+											"baseParameters": {
+												"operation_type": "UPDATE_FILE_READY",
+												"pipeline_run_id": {
+													"value": "@pipeline().parameters.p_pipeline_run_id",
+													"type": "Expression"
+												},
+												"business_dt": {
+													"value": "@pipeline().parameters.p_business_dt",
+													"type": "Expression"
+												},
+												"file_id": {
+													"value": "@pipeline().parameters.p_file_id",
+													"type": "Expression"
+												},
+												"source_system": {
+													"value": "@pipeline().parameters.p_source_system",
+													"type": "Expression"
+												},
+												"entity_name": {
+													"value": "@pipeline().parameters.p_entity_name",
+													"type": "Expression"
+												},
+												"file_pattern_name": {
+													"value": "@pipeline().parameters.p_file_pattern_name",
+													"type": "Expression"
+												},
+												"catalog_name": {
+													"value": "@pipeline().parameters.p_catalog_name",
+													"type": "Expression"
+												},
+												"environment": {
+													"value": "@pipeline().parameters.p_environment",
+													"type": "Expression"
+												},
+												"data_file_count": {
+													"value": "@string(variables('v_data_file_count'))",
+													"type": "Expression"
+												},
+												"success_file_count": {
+													"value": "@string(variables('v_success_file_count'))",
+													"type": "Expression"
+												},
+												"poll_count": {
+													"value": "@string(variables('v_poll_count'))",
+													"type": "Expression"
+												},
+												"arrival_status": "DATA_READY"
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_AZDBRICKS_DEV",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "DBR_INSERT_FILE_ARRIVAL_DETAIL",
+										"type": "DatabricksNotebook",
+										"dependsOn": [
+											{
+												"activity": "DBR_UPDATE_FILE_STATUS_READY",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 1,
+											"retryIntervalInSeconds": 60,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+											"baseParameters": {
+												"operation_type": "INSERT_FILE_ARRIVAL_DETAIL",
+												"pipeline_run_id": {
+													"value": "@pipeline().parameters.p_pipeline_run_id",
+													"type": "Expression"
+												},
+												"business_dt": {
+													"value": "@pipeline().parameters.p_business_dt",
+													"type": "Expression"
+												},
+												"file_id": {
+													"value": "@pipeline().parameters.p_file_id",
+													"type": "Expression"
+												},
+												"source_system": {
+													"value": "@pipeline().parameters.p_source_system",
+													"type": "Expression"
+												},
+												"entity_name": {
+													"value": "@pipeline().parameters.p_entity_name",
+													"type": "Expression"
+												},
+												"file_pattern_name": {
+													"value": "@pipeline().parameters.p_file_pattern_name",
+													"type": "Expression"
+												},
+												"catalog_name": {
+													"value": "@pipeline().parameters.p_catalog_name",
+													"type": "Expression"
+												},
+												"environment": {
+													"value": "@pipeline().parameters.p_environment",
+													"type": "Expression"
+												},
+												"data_file_name": {
+													"value": "@pipeline().parameters.p_data_file_name",
+													"type": "Expression"
+												},
+												"data_file_path": {
+													"value": "@concat(pipeline().parameters.p_source_folder_path, pipeline().parameters.p_data_file_name)",
+													"type": "Expression"
+												},
+												"success_file_name": {
+													"value": "@pipeline().parameters.p_success_file_name",
+													"type": "Expression"
+												},
+												"success_file_path": {
+													"value": "@concat(pipeline().parameters.p_source_folder_path, pipeline().parameters.p_success_file_name)",
+													"type": "Expression"
+												},
+												"file_status": "READY"
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_AZDBRICKS_DEV",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "SET_FILE_READY_TRUE",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "DBR_INSERT_FILE_ARRIVAL_DETAIL",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "v_file_ready",
+											"value": true
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "IF_FILE_READY_AFTER_POLLING",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "UNTIL_FILE_READY_OR_TIMEOUT",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(variables('v_file_ready'), true)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "DBR_UPDATE_FILE_STATUS_TIMEOUT_OR_SKIPPED",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": "UPDATE_FILE_TIMEOUT_OR_SKIPPED",
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"file_id": {
+										"value": "@pipeline().parameters.p_file_id",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_file_pattern_name",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"environment": {
+										"value": "@pipeline().parameters.p_environment",
+										"type": "Expression"
+									},
+									"mandatory_flag": {
+										"value": "@string(pipeline().parameters.p_mandatory_flag)",
+										"type": "Expression"
+									},
+									"poll_count": {
+										"value": "@string(variables('v_poll_count'))",
+										"type": "Expression"
+									},
+									"error_message": "File or SUCCESS marker not available within max polling limit"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "DBR_UPDATE_LAYER_STATUS_RUNNING",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": "UPDATE_LAYER_RUNNING",
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"file_id": {
+										"value": "@pipeline().parameters.p_file_id",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_file_pattern_name",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"environment": {
+										"value": "@pipeline().parameters.p_environment",
+										"type": "Expression"
+									},
+									"layer_name": "SILVER_STANDARDIZATION",
+									"process_name": {
+										"value": "@pipeline().parameters.p_bronze_silver_job_name",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "DBR_UPDATE_LAYER_STATUS_SUCCESS",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "DBR_RUN_BRONZE_SILVER_STANDARDIZATION",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": "UPDATE_LAYER_SUCCESS",
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"file_id": {
+										"value": "@pipeline().parameters.p_file_id",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_file_pattern_name",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"environment": {
+										"value": "@pipeline().parameters.p_environment",
+										"type": "Expression"
+									},
+									"layer_name": "SILVER_STANDARDIZATION"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "DBR_UPDATE_LAYER_STATUS_FAILED",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "DBR_RUN_BRONZE_SILVER_STANDARDIZATION",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": "UPDATE_LAYER_FAILED",
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"file_id": {
+										"value": "@pipeline().parameters.p_file_id",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_file_pattern_name",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"environment": {
+										"value": "@pipeline().parameters.p_environment",
+										"type": "Expression"
+									},
+									"layer_name": "SILVER_STANDARDIZATION",
+									"error_message": "Databricks Bronze/Silver Standardization failed"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "FAIL_DATABRICKS_STANDARDIZATION_FAILED",
+							"type": "Fail",
+							"dependsOn": [
+								{
+									"activity": "DBR_UPDATE_LAYER_STATUS_FAILED",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@concat('Databricks Bronze/Silver Standardization failed. Entity=', pipeline().parameters.p_entity_name, ', business_dt=', pipeline().parameters.p_business_dt)",
+									"type": "Expression"
+								},
+								"errorCode": "DBR_STANDARDIZATION_FAILED"
+							}
+						},
+						{
+							"name": "DBR_RUN_BRONZE_SILVER_STANDARDIZATION",
+							"type": "DatabricksJob",
+							"dependsOn": [
+								{
+									"activity": "DBR_UPDATE_LAYER_STATUS_RUNNING",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"jobId": "1009500841495816",
+								"jobParameters": {
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"force_reload": {
+										"value": "@string(pipeline().parameters.p_force_reload)",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"write_mode": {
+										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "IF_MANDATORY_FILE_FAIL",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "IF_FILE_READY_AFTER_POLLING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.p_mandatory_flag, true)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "SKIP_OPTIONAL_FILE",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "FAIL_MANDATORY_FILE_NOT_AVAILABLE",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@concat('Mandatory file or SUCCESS marker not available within max polling. Entity=', pipeline().parameters.p_entity_name, ', business_dt=', pipeline().parameters.p_business_dt, ', folder=', pipeline().parameters.p_source_folder_path, ', data_file=', pipeline().parameters.p_data_file_name, ', success_file=', pipeline().parameters.p_success_file_name, ', poll_count=', string(variables('v_poll_count')))",
+									"type": "Expression"
+								},
+								"errorCode": "MANDATORY_FILE_NOT_AVAILABLE"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_pipeline_run_id": {
+				"type": "String"
+			},
+			"p_business_dt": {
+				"type": "String"
+			},
+			"p_business_dt_token": {
+				"type": "String"
+			},
+			"p_environment": {
+				"type": "String",
+				"defaultValue": "dev"
+			},
+			"p_catalog_name": {
+				"type": "String",
+				"defaultValue": "credit_risk_dev"
+			},
+			"p_source_system": {
+				"type": "String",
+				"defaultValue": "home_credit"
+			},
+			"p_file_id": {
+				"type": "String"
+			},
+			"p_entity_name": {
+				"type": "String"
+			},
+			"p_file_pattern_name": {
+				"type": "String"
+			},
+			"p_source_folder_path": {
+				"type": "String"
+			},
+			"p_data_file_name": {
+				"type": "String"
+			},
+			"p_success_file_name": {
+				"type": "String"
+			},
+			"p_mandatory_flag": {
+				"type": "Bool",
+				"defaultValue": true
+			},
+			"p_success_file_required_flag": {
+				"type": "Bool",
+				"defaultValue": true
+			},
+			"p_polling_interval_minutes": {
+				"type": "Int",
+				"defaultValue": 5
+			},
+			"p_max_poll_count": {
+				"type": "Int",
+				"defaultValue": 24
+			},
+			"p_min_expected_file_count": {
+				"type": "Int",
+				"defaultValue": 1
+			},
+			"p_max_expected_file_count": {
+				"type": "Int",
+				"defaultValue": 1
+			},
+			"p_bronze_silver_job_name": {
+				"type": "String",
+				"defaultValue": "JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION"
+			},
+			"p_force_reload": {
+				"type": "Bool",
+				"defaultValue": false
+			},
+			"p_write_mode": {
+				"type": "String",
+				"defaultValue": "overwrite"
+			},
+			"p_run_type": {
+				"type": "String",
+				"defaultValue": "SCHEDULED"
+			},
+			"p_run_scope": {
+				"type": "String",
+				"defaultValue": "FULL"
+			}
+		},
+		"variables": {
+			"v_poll_count": {
+				"type": "Integer",
+				"defaultValue": 0
+			},
+			"v_next_poll_count": {
+				"type": "Integer",
+				"defaultValue": 0
+			},
+			"v_file_ready": {
+				"type": "Boolean",
+				"defaultValue": false
+			},
+			"v_data_file_count": {
+				"type": "Integer",
+				"defaultValue": 0
+			},
+			"v_success_file_count": {
+				"type": "Integer",
+				"defaultValue": 0
+			},
+			"v_error_message": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
