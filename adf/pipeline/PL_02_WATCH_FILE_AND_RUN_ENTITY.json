@@ -575,7 +575,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/99_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
 								"baseParameters": {
 									"operation_type": "UPDATE_FILE_TIMEOUT_OR_SKIPPED",
 									"pipeline_run_id": {
@@ -624,51 +624,6 @@
 							"linkedServiceName": {
 								"referenceName": "LS_AZDBRICKS_DEV",
 								"type": "LinkedServiceReference"
-							}
-						},
-						{
-							"name": "IF_MANDATORY_FILE_FAIL",
-							"type": "IfCondition",
-							"dependsOn": [
-								{
-									"activity": "DBR_UPDATE_FILE_STATUS_TIMEOUT_OR_SKIPPED",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"expression": {
-									"value": "@equals(pipeline().parameters.p_mandatory_flag, true)",
-									"type": "Expression"
-								},
-								"ifFalseActivities": [
-									{
-										"name": "SKIP_OPTIONAL_FILE",
-										"type": "Wait",
-										"dependsOn": [],
-										"userProperties": [],
-										"typeProperties": {
-											"waitTimeInSeconds": 1
-										}
-									}
-								],
-								"ifTrueActivities": [
-									{
-										"name": "FAIL_MANDATORY_FILE_NOT_AVAILABLE",
-										"type": "Fail",
-										"dependsOn": [],
-										"userProperties": [],
-										"typeProperties": {
-											"message": {
-												"value": "@concat('Mandatory file or SUCCESS marker not available within max polling. Entity=', pipeline().parameters.p_entity_name, ', business_dt=', pipeline().parameters.p_business_dt, ', folder=', pipeline().parameters.p_source_folder_path, ', data_file=', pipeline().parameters.p_data_file_name, ', success_file=', pipeline().parameters.p_success_file_name, ', poll_count=', string(variables('v_poll_count')))",
-												"type": "Expression"
-											},
-											"errorCode": "MANDATORY_FILE_NOT_AVAILABLE"
-										}
-									}
-								]
 							}
 						}
 					],
@@ -931,6 +886,51 @@
 							"linkedServiceName": {
 								"referenceName": "LS_AZDBRICKS_DEV",
 								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "IF_MANDATORY_FILE_FAIL",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "IF_FILE_READY_AFTER_POLLING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.p_mandatory_flag, true)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "SKIP_OPTIONAL_FILE",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "FAIL_MANDATORY_FILE_NOT_AVAILABLE",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@concat('Mandatory file or SUCCESS marker not available within max polling. Entity=', pipeline().parameters.p_entity_name, ', business_dt=', pipeline().parameters.p_business_dt, ', folder=', pipeline().parameters.p_source_folder_path, ', data_file=', pipeline().parameters.p_data_file_name, ', success_file=', pipeline().parameters.p_success_file_name, ', poll_count=', string(variables('v_poll_count')))",
+									"type": "Expression"
+								},
+								"errorCode": "MANDATORY_FILE_NOT_AVAILABLE"
 							}
 						}
 					]
