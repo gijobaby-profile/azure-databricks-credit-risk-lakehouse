@@ -686,7 +686,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/99_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
 								"baseParameters": {
 									"operation_type": "UPDATE_LAYER_RUNNING",
 									"pipeline_run_id": {
@@ -724,59 +724,6 @@
 									"layer_name": "SILVER_STANDARDIZATION",
 									"process_name": {
 										"value": "@pipeline().parameters.p_bronze_silver_job_name",
-										"type": "Expression"
-									}
-								}
-							},
-							"linkedServiceName": {
-								"referenceName": "LS_AZDBRICKS_DEV",
-								"type": "LinkedServiceReference"
-							}
-						},
-						{
-							"name": "DBR_RUN_BRONZE_SILVER_STANDARDIZATION",
-							"type": "DatabricksNotebook",
-							"dependsOn": [
-								{
-									"activity": "DBR_UPDATE_LAYER_STATUS_RUNNING",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 60,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/00_orchestration/run_bronze_silver_standardization",
-								"baseParameters": {
-									"business_dt": {
-										"value": "@pipeline().parameters.p_business_dt",
-										"type": "Expression"
-									},
-									"catalog_name": {
-										"value": "@pipeline().parameters.p_catalog_name",
-										"type": "Expression"
-									},
-									"entity_name": {
-										"value": "@pipeline().parameters.p_entity_name",
-										"type": "Expression"
-									},
-									"force_reload": {
-										"value": "@string(pipeline().parameters.p_force_reload)",
-										"type": "Expression"
-									},
-									"pipeline_run_id": {
-										"value": "@pipeline().parameters.p_pipeline_run_id",
-										"type": "Expression"
-									},
-									"write_mode": {
-										"value": "@pipeline().parameters.p_write_mode",
 										"type": "Expression"
 									}
 								}
@@ -931,6 +878,59 @@
 									"type": "Expression"
 								},
 								"errorCode": "DBR_STANDARDIZATION_FAILED"
+							}
+						},
+						{
+							"name": "DBR_RUN_BRONZE_SILVER_STANDARDIZATION",
+							"type": "DatabricksJob",
+							"dependsOn": [
+								{
+									"activity": "DBR_UPDATE_LAYER_STATUS_RUNNING",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"jobId": "1009500841495816",
+								"jobParameters": {
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"force_reload": {
+										"value": "@string(pipeline().parameters.p_force_reload)",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"write_mode": {
+										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
 							}
 						}
 					]
