@@ -103,7 +103,7 @@
 											"type": "Expression"
 										},
 										"p_business_dt": {
-											"value": "@pipeline().parameters.p_business_dt",
+											"value": "@pipeline().parameters.p_business_dt_token",
 											"type": "Expression"
 										}
 									}
