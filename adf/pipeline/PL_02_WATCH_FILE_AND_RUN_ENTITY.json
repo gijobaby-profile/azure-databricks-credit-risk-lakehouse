@@ -103,7 +103,7 @@
 											"type": "Expression"
 										},
 										"p_business_dt": {
-											"value": "@pipeline().parameters.p_business_dt",
+											"value": "@pipeline().parameters.p_business_dt_token",
 											"type": "Expression"
 										}
 									}
@@ -844,6 +844,12 @@
 									"dependencyConditions": [
 										"Succeeded"
 									]
+								},
+								{
+									"activity": "DBR_UPDATE_FILE_STATUS_AVAILABLE",
+									"dependencyConditions": [
+										"Succeeded"
+									]
 								}
 							],
 							"policy": {
@@ -887,50 +893,61 @@
 								"referenceName": "LS_AZDBRICKS_DEV",
 								"type": "LinkedServiceReference"
 							}
-						}
-					]
-				}
-			},
-			{
-				"name": "IF_MANDATORY_FILE_FAIL",
-				"type": "IfCondition",
-				"dependsOn": [
-					{
-						"activity": "IF_FILE_READY_AFTER_POLLING",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"expression": {
-						"value": "@equals(pipeline().parameters.p_mandatory_flag, true)",
-						"type": "Expression"
-					},
-					"ifFalseActivities": [
+						},
 						{
-							"name": "SKIP_OPTIONAL_FILE",
-							"type": "Wait",
+							"name": "DBR_UPDATE_FILE_STATUS_AVAILABLE",
+							"type": "DatabricksNotebook",
 							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 60,
+								"secureOutput": false,
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
-								"waitTimeInSeconds": 1
-							}
-						}
-					],
-					"ifTrueActivities": [
-						{
-							"name": "FAIL_MANDATORY_FILE_NOT_AVAILABLE",
-							"type": "Fail",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"message": {
-									"value": "@concat('Mandatory file or SUCCESS marker not available within max polling. Entity=', pipeline().parameters.p_entity_name, ', business_dt=', pipeline().parameters.p_business_dt, ', folder=', pipeline().parameters.p_source_folder_path, ', data_file=', pipeline().parameters.p_data_file_name, ', success_file=', pipeline().parameters.p_success_file_name, ', poll_count=', string(variables('v_poll_count')))",
-									"type": "Expression"
-								},
-								"errorCode": "MANDATORY_FILE_NOT_AVAILABLE"
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": "UPDATE_FILE_READY",
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"file_id": {
+										"value": "@pipeline().parameters.p_file_id",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_file_pattern_name",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"environment": {
+										"value": "@pipeline().parameters.p_environment",
+										"type": "Expression"
+									},
+									"arrival_status": "FILE_READY"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
 							}
 						}
 					]
@@ -939,13 +956,16 @@
 		],
 		"parameters": {
 			"p_pipeline_run_id": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "manual_test_20260602_001"
 			},
 			"p_business_dt": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "2026-06-02"
 			},
 			"p_business_dt_token": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "20260602"
 			},
 			"p_environment": {
 				"type": "String",
@@ -960,22 +980,28 @@
 				"defaultValue": "home_credit"
 			},
 			"p_file_id": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "FILE_HOME_CREDIT_APPLICATION_TRAIN"
 			},
 			"p_entity_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train"
 			},
 			"p_file_pattern_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train_files"
 			},
 			"p_source_folder_path": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "landing/home_credit/application_train/20260602/"
 			},
 			"p_data_file_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train.csv"
 			},
 			"p_success_file_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train.csv.SUCCESS"
 			},
 			"p_mandatory_flag": {
 				"type": "Bool",
