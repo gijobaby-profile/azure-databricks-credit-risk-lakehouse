@@ -939,13 +939,16 @@
 		],
 		"parameters": {
 			"p_pipeline_run_id": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "manual_test_20260602_001"
 			},
 			"p_business_dt": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "2026-06-02"
 			},
 			"p_business_dt_token": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "20260602"
 			},
 			"p_environment": {
 				"type": "String",
@@ -960,22 +963,28 @@
 				"defaultValue": "home_credit"
 			},
 			"p_file_id": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "FILE_HOME_CREDIT_APPLICATION_TRAIN"
 			},
 			"p_entity_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train"
 			},
 			"p_file_pattern_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train_files"
 			},
 			"p_source_folder_path": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "landing/home_credit/application_train/20260602/"
 			},
 			"p_data_file_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train.csv"
 			},
 			"p_success_file_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "application_train.csv.SUCCESS"
 			},
 			"p_mandatory_flag": {
 				"type": "Bool",
