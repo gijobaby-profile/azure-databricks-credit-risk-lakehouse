@@ -1,4 +1,16 @@
 -- Databricks notebook source
+select * from credit_risk_dev.orchestration.file_arrival_status
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.file_arrival_file_detail
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.layer_processing_status
+
+-- COMMAND ----------
+
 select * from credit_risk_dev.orchestration.file_ingestion_metadata
 
 -- COMMAND ----------
