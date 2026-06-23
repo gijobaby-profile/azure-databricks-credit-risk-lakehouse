@@ -1,6 +1,404 @@
 {
 	"name": "PL_00_TW_MASTER_ORCHESTRATOR",
 	"properties": {
-		"annotations": []
-	}
+		"description": "DAILY-only master pipeline. Init rows, lookup DAILY file metadata, call PL_02 in parallel, finalize run.",
+		"activities": [
+			{
+				"name": "SET_PIPELINE_RUN_ID",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "v_pipeline_run_id",
+					"value": {
+						"value": "@pipeline().RunId",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SET_BUSINESS_DT_TOKEN",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SET_PIPELINE_RUN_ID",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "v_business_dt_token",
+					"value": {
+						"value": "@replace(pipeline().parameters.p_business_dt, '-', '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "DBR_INIT_DAILY_RUN",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "SET_BUSINESS_DT_TOKEN",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_INIT_ADF_BUSINESS_DATE_RUN",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"business_dt_token": {
+							"value": "@variables('v_business_dt_token')",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@variables('v_pipeline_run_id')",
+							"type": "Expression"
+						},
+						"adf_run_id": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"pipeline_name": "PL_00_TW_MASTER_ORCHESTRATOR",
+						"environment": {
+							"value": "@pipeline().parameters.p_environment",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"expected_frequency": "DAILY",
+						"run_scope": {
+							"value": "@pipeline().parameters.p_run_scope",
+							"type": "Expression"
+						},
+						"run_type": {
+							"value": "@pipeline().parameters.p_run_type",
+							"type": "Expression"
+						},
+						"force_reload": {
+							"value": "@string(pipeline().parameters.p_force_reload)",
+							"type": "Expression"
+						},
+						"requested_by": "ADF"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LK_GET_DAILY_FILES",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "DBR_INIT_DAILY_RUN",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureDatabricksDeltaLakeSource",
+						"query": {
+							"value": "SELECT file_id, source_system, entity_name, file_pattern_name, source_base_path_pattern, data_file_name_pattern, success_file_name_suffix, mandatory_flag, polling_interval_minutes, max_poll_count, load_sequence FROM @{pipeline().parameters.p_catalog_name}.orchestration.file_ingestion_metadata WHERE active_flag = true AND source_system = '@{pipeline().parameters.p_source_system}' AND expected_frequency = 'DAILY' ORDER BY load_sequence",
+							"type": "Expression"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "FE_DAILY_FILES",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LK_GET_DAILY_FILES",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LK_GET_DAILY_FILES').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 8,
+					"activities": [
+						{
+							"name": "EXEC_PL_02_WATCH_FILE",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_pipeline_run_id": {
+										"value": "@variables('v_pipeline_run_id')",
+										"type": "Expression"
+									},
+									"p_business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"p_catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"p_source_system": {
+										"value": "@item().source_system",
+										"type": "Expression"
+									},
+									"p_file_id": {
+										"value": "@item().file_id",
+										"type": "Expression"
+									},
+									"p_entity_name": {
+										"value": "@item().entity_name",
+										"type": "Expression"
+									},
+									"p_file_pattern_name": {
+										"value": "@item().file_pattern_name",
+										"type": "Expression"
+									},
+									"p_source_folder_path": {
+										"value": "@replace(replace(item().source_base_path_pattern, '{business_dt_token}', variables('v_business_dt_token')), '{business_dt}', pipeline().parameters.p_business_dt)",
+										"type": "Expression"
+									},
+									"p_data_file_name": {
+										"value": "@item().data_file_name_pattern",
+										"type": "Expression"
+									},
+									"p_success_file_name": {
+										"value": "@concat(item().data_file_name_pattern, item().success_file_name_suffix)",
+										"type": "Expression"
+									},
+									"p_mandatory_flag": {
+										"value": "@item().mandatory_flag",
+										"type": "Expression"
+									},
+									"p_polling_interval_minutes": {
+										"value": "@item().polling_interval_minutes",
+										"type": "Expression"
+									},
+									"p_max_poll_count": {
+										"value": "@item().max_poll_count",
+										"type": "Expression"
+									},
+									"p_force_reload": {
+										"value": "@pipeline().parameters.p_force_reload",
+										"type": "Expression"
+									},
+									"p_write_mode": {
+										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "DBR_FINALIZE_DAILY_RUN",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "FE_DAILY_FILES",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@variables('v_pipeline_run_id')",
+							"type": "Expression"
+						},
+						"final_status": "SUCCESS",
+						"error_message": ""
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "DBR_FINALIZE_FAILED_RUN",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "FE_DAILY_FILES",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@variables('v_pipeline_run_id')",
+							"type": "Expression"
+						},
+						"final_status": "FAILED",
+						"error_message": "One or more DAILY file watchers failed"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "FAIL_DAILY_MASTER_RUN",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "DBR_FINALIZE_FAILED_RUN",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "PL_00_TW_MASTER_ORCHESTRATOR failed because one or more DAILY file watchers failed.",
+					"errorCode": "PL00_DAILY_FAILED"
+				}
+			}
+		],
+		"parameters": {
+			"p_business_dt": {
+				"type": "String"
+			},
+			"p_catalog_name": {
+				"type": "String",
+				"defaultValue": "credit_risk_dev"
+			},
+			"p_environment": {
+				"type": "String",
+				"defaultValue": "dev"
+			},
+			"p_source_system": {
+				"type": "String",
+				"defaultValue": "home_credit"
+			},
+			"p_force_reload": {
+				"type": "Bool",
+				"defaultValue": false
+			},
+			"p_write_mode": {
+				"type": "String",
+				"defaultValue": "overwrite"
+			},
+			"p_run_type": {
+				"type": "String",
+				"defaultValue": "MANUAL"
+			},
+			"p_run_scope": {
+				"type": "String",
+				"defaultValue": "FULL"
+			}
+		},
+		"variables": {
+			"v_pipeline_run_id": {
+				"type": "String"
+			},
+			"v_business_dt_token": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "orchestration"
+		},
+		"annotations": [
+			"daily-only",
+			"master-orchestrator"
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }
