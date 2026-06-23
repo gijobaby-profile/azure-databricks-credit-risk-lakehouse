@@ -64,7 +64,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_INIT_ADF_BUSINESS_DATE_RUN",
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_INIT_ADF_BUSINESS_DATE_RUN",
 					"baseParameters": {
 						"catalog_name": {
 							"value": "@pipeline().parameters.p_catalog_name",
@@ -267,7 +267,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
 					"baseParameters": {
 						"catalog_name": {
 							"value": "@pipeline().parameters.p_catalog_name",
@@ -310,7 +310,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Workspace/Repos/<your_repo>/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
 					"baseParameters": {
 						"catalog_name": {
 							"value": "@pipeline().parameters.p_catalog_name",
