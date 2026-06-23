@@ -83,7 +83,7 @@ elif operation_type == "UPDATE_FILE_READY":
 
     spark.sql(f"""
         UPDATE {file_arrival_status}
-        SET arrival_status = 'DATA_READY',
+        SET arrival_status = 'FILE_READY',
             data_file_arrived_flag = true,
             success_file_arrived_flag = true,
             matched_data_file_count = {data_file_count},
