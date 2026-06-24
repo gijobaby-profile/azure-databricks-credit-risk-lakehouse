@@ -271,7 +271,7 @@
 							"type": "Expression"
 						},
 						"business_dt": {
-							"value": "@pipeline().parameters.p_business_dt",
+							"value": "@variables('v_business_dt')",
 							"type": "Expression"
 						},
 						"pipeline_run_id": {
@@ -314,7 +314,7 @@
 							"type": "Expression"
 						},
 						"business_dt": {
-							"value": "@pipeline().parameters.p_business_dt",
+							"value": "@variables('v_business_dt')",
 							"type": "Expression"
 						},
 						"pipeline_run_id": {
@@ -322,7 +322,7 @@
 							"type": "Expression"
 						},
 						"final_status": "FAILED",
-						"error_message": "One or more DAILY file watchers failed"
+						"error_message": "One or more MONTHLY file watchers failed"
 					}
 				},
 				"linkedServiceName": {
@@ -344,7 +344,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"message": "PL_00_TW_MASTER_ORCHESTRATOR failed because one or more DAILY file watchers failed.",
-					"errorCode": "PL00_DAILY_FAILED"
+					"errorCode": "PL00_MONTHLY_FAILED"
 				}
 			},
 			{
