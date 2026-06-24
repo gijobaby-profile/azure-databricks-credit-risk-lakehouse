@@ -46,7 +46,7 @@
 				"typeProperties": {
 					"variableName": "v_business_dt_token",
 					"value": {
-						"value": "@replace(pipeline().parameters.p_business_dt, '-', '')",
+						"value": "@replace(variables('v_business_dt'),'-','')",
 						"type": "Expression"
 					}
 				}
