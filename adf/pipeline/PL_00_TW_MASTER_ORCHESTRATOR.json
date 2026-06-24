@@ -279,7 +279,7 @@
 							"type": "Expression"
 						},
 						"final_status": "SUCCESS",
-						"error_message": ""
+						"error_message": "None"
 					}
 				},
 				"linkedServiceName": {
