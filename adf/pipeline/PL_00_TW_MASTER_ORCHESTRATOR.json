@@ -447,9 +447,6 @@
 				"type": "String"
 			}
 		},
-		"folder": {
-			"name": "orchestration"
-		},
 		"annotations": [
 			"daily-only",
 			"master-orchestrator"
