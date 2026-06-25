@@ -137,7 +137,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('NB_GET_FILE_METADATA_FOR_ADF').output.values",
+						"value": "@activity('NB_GET_FILE_METADATA_FOR_ADF').output.runOutput",
 						"type": "Expression"
 					},
 					"isSequential": false,
@@ -446,9 +446,6 @@
 			"v_business_dt": {
 				"type": "String"
 			}
-		},
-		"folder": {
-			"name": "orchestration"
 		},
 		"annotations": [
 			"daily-only",
