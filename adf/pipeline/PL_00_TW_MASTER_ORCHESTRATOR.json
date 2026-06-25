@@ -6,7 +6,14 @@
 			{
 				"name": "SET_PIPELINE_RUN_ID",
 				"type": "SetVariable",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "SET_BUSINESS_DT",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"secureOutput": false,
 					"secureInput": false
@@ -39,13 +46,13 @@
 				"typeProperties": {
 					"variableName": "v_business_dt_token",
 					"value": {
-						"value": "@replace(pipeline().parameters.p_business_dt, '-', '')",
+						"value": "@replace(variables('v_business_dt'),'-','')",
 						"type": "Expression"
 					}
 				}
 			},
 			{
-				"name": "DBR_INIT_DAILY_RUN",
+				"name": "INITIALIZE_ORCHESTRATION_TABLE",
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
@@ -71,7 +78,7 @@
 							"type": "Expression"
 						},
 						"business_dt": {
-							"value": "@pipeline().parameters.p_business_dt",
+							"value": "@variables('v_business_dt')",
 							"type": "Expression"
 						},
 						"business_dt_token": {
@@ -95,7 +102,7 @@
 							"value": "@pipeline().parameters.p_source_system",
 							"type": "Expression"
 						},
-						"expected_frequency": "DAILY",
+						"expected_frequency": "MONTHLY",
 						"run_scope": {
 							"value": "@pipeline().parameters.p_run_scope",
 							"type": "Expression"
@@ -117,41 +124,11 @@
 				}
 			},
 			{
-				"name": "LK_GET_DAILY_FILES",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "DBR_INIT_DAILY_RUN",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "AzureDatabricksDeltaLakeSource",
-						"query": {
-							"value": "SELECT file_id, source_system, entity_name, file_pattern_name, source_base_path_pattern, data_file_name_pattern, success_file_name_suffix, mandatory_flag, polling_interval_minutes, max_poll_count, load_sequence FROM @{pipeline().parameters.p_catalog_name}.orchestration.file_ingestion_metadata WHERE active_flag = true AND source_system = '@{pipeline().parameters.p_source_system}' AND expected_frequency = 'DAILY' ORDER BY load_sequence",
-							"type": "Expression"
-						}
-					},
-					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "FE_DAILY_FILES",
+				"name": "FE_MONTHLY_FILES",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "LK_GET_DAILY_FILES",
+						"activity": "NB_GET_FILE_METADATA_FOR_ADF",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -160,11 +137,11 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('LK_GET_DAILY_FILES').output.value",
+						"value": "@activity('NB_GET_FILE_METADATA_FOR_ADF').output.values",
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 8,
+					"batchCount": 10,
 					"activities": [
 						{
 							"name": "EXEC_PL_02_WATCH_FILE",
@@ -186,7 +163,15 @@
 										"type": "Expression"
 									},
 									"p_business_dt": {
-										"value": "@pipeline().parameters.p_business_dt",
+										"value": "@variables('v_business_dt')",
+										"type": "Expression"
+									},
+									"p_business_dt_token": {
+										"value": "@variables('v_business_dt_token')",
+										"type": "Expression"
+									},
+									"p_environment": {
+										"value": "@pipeline().parameters.p_environment",
 										"type": "Expression"
 									},
 									"p_catalog_name": {
@@ -225,6 +210,7 @@
 										"value": "@item().mandatory_flag",
 										"type": "Expression"
 									},
+									"p_success_file_required_flag": true,
 									"p_polling_interval_minutes": {
 										"value": "@item().polling_interval_minutes",
 										"type": "Expression"
@@ -233,12 +219,23 @@
 										"value": "@item().max_poll_count",
 										"type": "Expression"
 									},
+									"p_min_expected_file_count": 1,
+									"p_max_expected_file_count": 1,
+									"p_bronze_silver_job_name": "JOB_01_ENTITY_BRONZE_SILVER_STANDARDIZATION",
 									"p_force_reload": {
 										"value": "@pipeline().parameters.p_force_reload",
 										"type": "Expression"
 									},
 									"p_write_mode": {
 										"value": "@pipeline().parameters.p_write_mode",
+										"type": "Expression"
+									},
+									"p_run_type": {
+										"value": "@pipeline().parameters.p_run_type",
+										"type": "Expression"
+									},
+									"p_run_scope": {
+										"value": "@pipeline().parameters.p_run_scope",
 										"type": "Expression"
 									}
 								}
@@ -252,7 +249,7 @@
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "FE_DAILY_FILES",
+						"activity": "FE_MONTHLY_FILES",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -274,7 +271,7 @@
 							"type": "Expression"
 						},
 						"business_dt": {
-							"value": "@pipeline().parameters.p_business_dt",
+							"value": "@variables('v_business_dt')",
 							"type": "Expression"
 						},
 						"pipeline_run_id": {
@@ -282,7 +279,7 @@
 							"type": "Expression"
 						},
 						"final_status": "SUCCESS",
-						"error_message": ""
+						"error_message": "None"
 					}
 				},
 				"linkedServiceName": {
@@ -295,7 +292,7 @@
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "FE_DAILY_FILES",
+						"activity": "FE_MONTHLY_FILES",
 						"dependencyConditions": [
 							"Failed"
 						]
@@ -317,7 +314,7 @@
 							"type": "Expression"
 						},
 						"business_dt": {
-							"value": "@pipeline().parameters.p_business_dt",
+							"value": "@variables('v_business_dt')",
 							"type": "Expression"
 						},
 						"pipeline_run_id": {
@@ -325,7 +322,7 @@
 							"type": "Expression"
 						},
 						"final_status": "FAILED",
-						"error_message": "One or more DAILY file watchers failed"
+						"error_message": "One or more MONTHLY file watchers failed"
 					}
 				},
 				"linkedServiceName": {
@@ -347,7 +344,62 @@
 				"userProperties": [],
 				"typeProperties": {
 					"message": "PL_00_TW_MASTER_ORCHESTRATOR failed because one or more DAILY file watchers failed.",
-					"errorCode": "PL00_DAILY_FAILED"
+					"errorCode": "PL00_MONTHLY_FAILED"
+				}
+			},
+			{
+				"name": "SET_BUSINESS_DT",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "v_business_dt",
+					"value": {
+						"value": "@if(\n    empty(pipeline().parameters.p_business_dt),\n    formatDateTime(addDays(startOfMonth(utcNow()), -1), 'yyyy-MM-dd'),\n    pipeline().parameters.p_business_dt\n)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "NB_GET_FILE_METADATA_FOR_ADF",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "INITIALIZE_ORCHESTRATION_TABLE",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_GET_FILE_METADATA_FOR_ADF",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"expected_frequency": "MONTHLY"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
@@ -389,6 +441,9 @@
 				"type": "String"
 			},
 			"v_business_dt_token": {
+				"type": "String"
+			},
+			"v_business_dt": {
 				"type": "String"
 			}
 		},
