@@ -205,7 +205,7 @@
 											"referenceName": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": false,
+										"waitOnCompletion": true,
 										"parameters": {
 											"p_pipeline_run_id": {
 												"value": "@variables('v_pipeline_run_id')",
