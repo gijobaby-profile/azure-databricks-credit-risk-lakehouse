@@ -150,7 +150,20 @@
 							"policy": {
 								"secureInput": false
 							},
-							"userProperties": [],
+							"userProperties": [
+								{
+									"name": "file_name",
+									"value": "@item().file_name"
+								},
+								{
+									"name": "entity_name",
+									"value": "@item().entity_name"
+								},
+								{
+									"name": "business_dt",
+									"value": "@item().business_dt"
+								}
+							],
 							"typeProperties": {
 								"pipeline": {
 									"referenceName": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
