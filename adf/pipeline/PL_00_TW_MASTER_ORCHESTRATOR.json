@@ -141,7 +141,7 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 10,
+					"batchCount": 8,
 					"activities": [
 						{
 							"name": "EXEC_PL_02_WATCH_FILE",
@@ -150,13 +150,26 @@
 							"policy": {
 								"secureInput": false
 							},
-							"userProperties": [],
+							"userProperties": [
+								{
+									"name": "file_name",
+									"value": "@item().file_name"
+								},
+								{
+									"name": "entity_name",
+									"value": "@item().entity_name"
+								},
+								{
+									"name": "business_dt",
+									"value": "@item().business_dt"
+								}
+							],
 							"typeProperties": {
 								"pipeline": {
 									"referenceName": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
+								"waitOnCompletion": false,
 								"parameters": {
 									"p_pipeline_run_id": {
 										"value": "@variables('v_pipeline_run_id')",
