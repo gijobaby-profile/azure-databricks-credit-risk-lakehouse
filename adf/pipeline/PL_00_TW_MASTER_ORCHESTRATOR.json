@@ -141,7 +141,7 @@
 						"type": "Expression"
 					},
 					"isSequential": false,
-					"batchCount": 10,
+					"batchCount": 8,
 					"activities": [
 						{
 							"name": "EXEC_PL_02_WATCH_FILE",
@@ -169,7 +169,7 @@
 									"referenceName": "PL_02_WATCH_FILE_AND_RUN_ENTITY",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
+								"waitOnCompletion": false,
 								"parameters": {
 									"p_pipeline_run_id": {
 										"value": "@variables('v_pipeline_run_id')",
