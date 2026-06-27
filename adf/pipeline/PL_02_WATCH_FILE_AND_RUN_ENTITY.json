@@ -954,6 +954,7 @@
 				}
 			}
 		],
+		"concurrency": 4,
 		"parameters": {
 			"p_pipeline_run_id": {
 				"type": "String",
