@@ -1,4 +1,33 @@
 -- Databricks notebook source
+select * from credit_risk_dev.orchestration.file_arrival_file_detail
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.audit.table_load_log
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.audit.pipeline_run_log
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.pipeline_run_control
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.file_ingestion_metadata
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.layer_processing_status order by start_timestamp desc
+
+-- COMMAND ----------
+
+update credit_risk_dev.orchestration.file_ingestion_metadata
+set expected_frequency = 'MONTHLY';
+
+-- COMMAND ----------
+
 select * from credit_risk_dev.orchestration.file_ingestion_metadata
 
 -- COMMAND ----------
