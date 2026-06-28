@@ -42,8 +42,6 @@ ORDER BY load_sequence
 df = spark.sql(query)
 
 
-
-
 # COMMAND ----------
 
 rows = [row.asDict() for row in df.collect() ]
