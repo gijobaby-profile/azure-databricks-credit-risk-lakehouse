@@ -53,7 +53,7 @@
 								}
 							],
 							"typeProperties": {
-								"notebookPath": "/Repos/<your-repo>/notebooks/orchestration/NB_CHECK_LAYER_PROCESSING_STATUS",
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_CHECK_LAYER_PROCESSING_STATUS",
 								"baseParameters": {
 									"p_business_dt": {
 										"value": "@pipeline().parameters.p_business_dt",
@@ -246,7 +246,7 @@
 								}
 							],
 							"typeProperties": {
-								"notebookPath": "/Repos/<your-repo>/notebooks/silver_conformed/NB_RUN_SILVER_CONFORMED",
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_CHECK_LAYER_PROCESSING_STATUS",
 								"baseParameters": {
 									"p_business_dt": {
 										"value": "@pipeline().parameters.p_business_dt",
