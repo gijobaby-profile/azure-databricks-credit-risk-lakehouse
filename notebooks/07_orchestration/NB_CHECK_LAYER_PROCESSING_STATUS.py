@@ -13,7 +13,7 @@ dbutils.widgets.text("p_expected_frequency", "monthly")
 # COMMAND ----------
 
 p_business_dt = dbutils.widgets.get("p_business_dt").strip()
-p_layer_name = dbutils.widgets.get("p_layer_name").strip()
+p_layer_name = dbutils.widgets.get("p_layer_name").strip().lower()
 p_catalog_name = dbutils.widgets.get("p_catalog_name").strip()
 p_expected_frequency = dbutils.widgets.get("p_expected_frequency").strip().lower()
 
@@ -82,12 +82,12 @@ SELECT
     END) AS failed_count,
 
     COUNT(DISTINCT CASE
-        WHEN upper(status) IN ('WAITING', 'IN_PROGRESS', 'EXPECTED', 'READY') THEN entity_name
+        WHEN upper(status) IN ('WAITING', 'IN_PROGRESS', 'EXPECTED', 'READY','NOT_STARTED') THEN entity_name
     END) AS waiting_count
 
 FROM {p_status_table}
 WHERE business_dt = '{p_business_dt}'
-  AND layer_name = '{p_layer_name}'
+  AND lower(layer_name) = '{p_layer_name}'
   AND entity_name IN ({expected_file_ids_sql})
 """
 
@@ -120,7 +120,7 @@ SELECT
     CAST(status AS STRING) AS status
 FROM {p_status_table}
 WHERE business_dt = '{p_business_dt}'
-  AND layer_name = '{p_layer_name}'
+  AND lower(layer_name) = '{p_layer_name}'
   AND entity_name IN ({expected_file_ids_sql})
   AND upper(status) <> 'SUCCESS'
 LIMIT 50
@@ -137,7 +137,7 @@ SELECT DISTINCT
        CAST(entity_name AS STRING) AS entity_name
 FROM {p_status_table}
 WHERE business_dt = '{p_business_dt}'
-  AND layer_name = '{p_layer_name}'
+  AND lower(layer_name) = '{p_layer_name}'
   AND entity_name IN ({expected_file_ids_sql})
 """
 
