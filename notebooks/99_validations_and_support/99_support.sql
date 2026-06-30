@@ -1,4 +1,8 @@
 -- Databricks notebook source
+select * from credit_risk_dev.information_schema.columns where table_name='layer_processing_status'
+
+-- COMMAND ----------
+
 select * from credit_risk_dev.information_schema.tables order by table_schema, table_name
 
 -- COMMAND ----------
@@ -40,6 +44,10 @@ select * from credit_risk_dev.orchestration.pipeline_run_control
 -- COMMAND ----------
 
 select * from credit_risk_dev.orchestration.file_ingestion_metadata
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_conformance_entity_config
 
 -- COMMAND ----------
 
