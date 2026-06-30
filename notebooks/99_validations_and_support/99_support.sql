@@ -1,4 +1,28 @@
 -- Databricks notebook source
+select * from credit_risk_dev.information_schema.tables order by table_schema, table_name
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+SELECT *
+FROM system.access.table_lineage
+WHERE source_table_full_name = 'credit_risk_dev.config.silver_conformance_config'
+   OR target_table_full_name = 'credit_risk_dev.config.silver_conformance_config';
+
+-- COMMAND ----------
+
+drop table  credit_risk_dev.config.silver_conformance_config
+
+
+-- COMMAND ----------
+
+select * from credit_risk_dev.config.silver_conformance_entity_config;
+
+-- COMMAND ----------
+
 select * from credit_risk_dev.orchestration.file_arrival_file_detail
 
 -- COMMAND ----------
