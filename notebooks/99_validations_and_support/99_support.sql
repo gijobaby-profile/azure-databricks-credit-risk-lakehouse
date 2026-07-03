@@ -18,8 +18,13 @@ WHERE source_table_full_name = 'credit_risk_dev.config.silver_conformance_config
 
 -- COMMAND ----------
 
-drop table  credit_risk_dev.config.silver_conformance_config
+update credit_risk_dev.orchestration.layer_processing_status 
+set file_pattern_name = 'silver_conformed'
+where layer_name='silver_conformed'
 
+-- COMMAND ----------
+
+select * from credit_risk_dev.orchestration.layer_processing_status where layer_name='silver_conformed'
 
 -- COMMAND ----------
 
