@@ -60,7 +60,7 @@ USING (
         '{pipeline_run_id}' AS pipeline_run_id,
         '{source_system}' AS source_system,
         entity_name,
-        CAST(NULL AS STRING) AS file_pattern_name,
+        CAST('silver_conformed' AS STRING) AS file_pattern_name,
         CAST(NULL AS STRING) AS data_file_name,
         'silver_conformed' AS layer_name,
         process_name,
