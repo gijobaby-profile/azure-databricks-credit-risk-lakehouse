@@ -1,5 +1,5 @@
 {
-	"name": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY_Test",
+	"name": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
 	"properties": {
 		"description": "Runs one Silver Conformance entity. Routes SCD2 entities to the dedicated customer notebook and all other entities to the generic notebook, while updating layer_processing_status.",
 		"activities": [

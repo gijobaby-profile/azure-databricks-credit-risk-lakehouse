@@ -1,5 +1,5 @@
 {
-	"name": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES_Test",
+	"name": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES",
 	"properties": {
 		"description": "Iterates over active Silver Conformance entities returned from Unity Catalog and invokes PL_03A for each entity with controlled parallelism.",
 		"activities": [
@@ -35,7 +35,7 @@
 							],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY_Test",
+									"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,

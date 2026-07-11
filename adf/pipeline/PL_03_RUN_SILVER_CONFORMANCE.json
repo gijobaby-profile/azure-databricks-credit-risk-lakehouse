@@ -303,7 +303,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES_Test",
+									"referenceName": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
