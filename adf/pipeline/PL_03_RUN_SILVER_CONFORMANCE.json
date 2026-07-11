@@ -1,7 +1,7 @@
 {
 	"name": "PL_03_RUN_SILVER_CONFORMANCE",
 	"properties": {
-		"description": "Waits for silver_standardization readiness, initializes silver_conformed status rows, reads entity routing config including is_scd2, and runs each entity in parallel through a child pipeline.",
+		"description": "Waits for silver_standardization readiness, initializes silver_conformed status rows, reads entity routing configuration, and invokes a child pipeline to process entities in parallel.",
 		"activities": [
 			{
 				"name": "UNTIL_STANDARDIZATION_READY_OR_TIMEOUT",
@@ -287,8 +287,8 @@
 							}
 						},
 						{
-							"name": "FE_RUN_SILVER_CONFORMED_ENTITIES",
-							"type": "ForEach",
+							"name": "EXEC_PL03B_RUN_ALL_ENTITIES",
+							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
 									"activity": "NB_GET_SILVER_CONFORMANCE_ENTITIES",
@@ -297,67 +297,16 @@
 									]
 								}
 							],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
-								"items": {
-									"value": "@json(activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput).entities",
-									"type": "Expression"
+								"pipeline": {
+									"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
+									"type": "PipelineReference"
 								},
-								"isSequential": false,
-								"batchCount": 5,
-								"activities": [
-									{
-										"name": "EXEC_PL03A_RUN_ONE_ENTITY",
-										"type": "ExecutePipeline",
-										"dependsOn": [],
-										"policy": {
-											"secureInput": false
-										},
-										"userProperties": [
-											{
-												"name": "entity_name",
-												"value": "@item().entity_name"
-											},
-											{
-												"name": "is_scd2",
-												"value": "@string(item().is_scd2)"
-											}
-										],
-										"typeProperties": {
-											"pipeline": {
-												"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
-												"type": "PipelineReference"
-											},
-											"waitOnCompletion": true,
-											"parameters": {
-												"p_business_dt": {
-													"value": "@pipeline().parameters.p_business_dt",
-													"type": "Expression"
-												},
-												"p_pipeline_run_id": {
-													"value": "@pipeline().RunId",
-													"type": "Expression"
-												},
-												"p_catalog_name": {
-													"value": "@pipeline().parameters.p_catalog_name",
-													"type": "Expression"
-												},
-												"p_source_system": {
-													"value": "@pipeline().parameters.p_source_system",
-													"type": "Expression"
-												},
-												"p_entity_name": {
-													"value": "@item().entity_name",
-													"type": "Expression"
-												},
-												"p_is_scd2": {
-													"value": "@string(item().is_scd2)",
-													"type": "Expression"
-												}
-											}
-										}
-									}
-								]
+								"waitOnCompletion": true
 							}
 						},
 						{
@@ -365,7 +314,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "FE_RUN_SILVER_CONFORMED_ENTITIES",
+									"activity": "EXEC_PL03B_RUN_ALL_ENTITIES",
 									"dependencyConditions": [
 										"Succeeded"
 									]
