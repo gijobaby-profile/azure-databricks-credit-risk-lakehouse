@@ -299,10 +299,7 @@
 								}
 							],
 							"typeProperties": {
-								"jobId": {
-									"value": "@pipeline().parameters.p_gold_job_id",
-									"type": "Expression"
-								},
+								"jobId": "1059985457291720",
 								"jobParameters": {
 									"business_dt": {
 										"value": "@pipeline().parameters.p_business_dt",
