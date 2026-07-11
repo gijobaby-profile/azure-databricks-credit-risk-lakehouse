@@ -1,8 +1,14 @@
 # Azure Databricks Credit Risk Lakehouse
 
-A production-inspired Azure Databricks Lakehouse project for credit risk analytics, built using Medallion Architecture, Delta Lake, PySpark, Spark SQL, metadata-driven ingestion, configurable data quality validation, audit logging, and reusable pipeline components.
+A production-inspired Azure Databricks Lakehouse project for credit-risk analytics, built using Medallion Architecture, Delta Lake, PySpark, Spark SQL, metadata-driven ingestion, configurable data quality validation, audit logging, and reusable pipeline components.
 
-This project demonstrates how raw credit risk datasets can be ingested, standardized, conformed, validated, and prepared for downstream analytics in a scalable banking-style data engineering environment.
+This project demonstrates how raw credit-risk datasets can be ingested, standardized, conformed, validated, and prepared for downstream analytics in a scalable banking-style data engineering environment.
+
+## Recruiter Summary
+
+This project demonstrates current hands-on Azure Databricks data engineering experience through a production-inspired credit-risk lakehouse. It covers Bronze ingestion, Silver standardization, Silver conformance, configurable data quality validation, rejected-record handling, audit logging, Azure Data Factory orchestration assets, a CI/CD-ready repository structure, and reusable PySpark modules.
+
+The project is designed to show practical capability in Azure Databricks, PySpark, Spark SQL, Delta Lake, Azure Data Factory, GitHub-based development, and banking/credit-risk data modelling.
 
 ---
 
@@ -433,40 +439,74 @@ notebooks/03_silver_conformance/
 
 ---
 
-## 15. Future Enhancements
+## 15. Implementation Status 
 
-Planned improvements include:
+### 15.1. Phase 1 Status
 
-- Gold-layer credit risk feature marts
-- Power BI dashboard integration
-- Databricks Workflow job definitions
-- Azure Data Factory orchestration for end-to-end pipeline execution using file-watcher polling and tumbling/window-based trigger patterns
-- CI/CD deployment with environment-specific parameters
-- dbt implementation in the Gold Layer for modular SQL modelling, testing, and documentation
-- Databricks Asset Bundles for workflow deployment, environment configuration, and CI/CD readiness
-- Automated unit testing for PySpark transformations
-- Incremental load support for selected source entities
-- Unity Catalog lineage documentation
-- ML feature engineering for PD/LGD/EAD-style credit risk modelling
+This project is implemented as a production-inspired Azure Databricks credit-risk lakehouse. The core Databricks lakehouse implementation is completed, while orchestration, deployment automation, and selected extension features are being added in controlled phases.
+
+| Area | Component | Status | Comments |
+|---|---|---|---|
+| Databricks Lakehouse | Bronze ingestion | Completed | Raw source files are loaded into Bronze Delta tables with source metadata and pipeline tracking. |
+| Databricks Lakehouse | Silver Standardization | Completed | Standardized tables are created using metadata-driven column mapping, datatype casting, validation logic, and rejected-record handling. |
+| Databricks Lakehouse | Silver Conformance | Completed | Business-aligned conformed entities are created from standardized source tables. |
+| Databricks Lakehouse | Customer SCD Type 2 | Completed | Customer history is tracked using hash-based change detection and effective-date handling. |
+| Databricks Lakehouse | Data Quality Framework | Completed | Metadata-driven data quality rules are applied with rejected-record handling and rule-level traceability. |
+| Databricks Lakehouse | Audit and Error Logging | Completed | Pipeline execution, table loads, record counts, and errors are captured for operational traceability. |
+| Databricks Lakehouse | Gold Risk Marts | Completed | Analytics-ready Gold-layer risk marts are created for credit-risk KPI analysis. |
+| Databricks Lakehouse | Reusable PySpark Modules | Completed | Common logic is modularized for configuration reading, transformations, DQ validation, SCD handling, and logging. |
+| Databricks Asset Bundles | `databricks.yml` | Completed | Root bundle configuration is available for Databricks Asset Bundle structure. |
+| Databricks Asset Bundles | Resource Definitions | In Progress | Resource files are being prepared for jobs, workflows, parameters, and environment-specific deployment settings. |
+| CI/CD | GitHub Repository Structure | Completed | Repository is organized with notebooks, source modules, SQL scripts, ADF assets, resources, and documentation. |
+| CI/CD | GitHub Actions Workflow Structure | In Progress | Workflow files are being prepared for validation and deployment automation. |
+| Azure Data Factory | Linked Services | Completed | Linked services are configured for ADLS, Azure Databricks, and Key Vault integration. |
+| Azure Data Factory | Datasets | Completed | ADF datasets are being configured for source, control, and orchestration metadata access. |
+| Azure Data Factory | Test Pipeline | Planned | A validation pipeline will confirm linked services, parameters, and connectivity. |
+| Azure Data Factory | Databricks Test Execution | In Progress | ADF will trigger a Databricks notebook/job to validate execution from ADF to Databricks. |
+| Azure Data Factory | File Watcher Pipeline | In Progress | A file-watcher pipeline will check landing-zone file availability before downstream processing starts. |
+| Azure Data Factory | Main Orchestration Pipeline | In Progress | The main orchestration pipeline will coordinate Bronze, Silver, Conformed, and Gold execution using dependency checks and business date parameters. |
+
+
+### 15.2. Phase 2 Extensions
+
+| Area | Component | Status | Comments |
+|---|---|---|---|
+| Phase 2 Extension | Power BI Dashboard | Planned | Build dashboard views for Gold-layer credit risk KPIs and analytical outputs. |
+| Phase 2 Extension | dbt Gold-Layer Modelling | Planned | Add modular SQL modelling, testing, documentation, and lineage support for Gold-layer transformations. |
+| Phase 2 Extension | Configurable Debug Mode | Planned | Add development-time debug logging while keeping production logs clean and readable. |
+| Phase 2 Extension | Incremental Load Support | Planned | Extend selected source entities with partial or change-based processing where business requirements justify it. |
+| Phase 2 Extension | Streaming Source Integration | Planned | Add streaming or near-real-time ingestion to demonstrate Databricks streaming capabilities. |
 
 ---
 
-## 16. Project Status
+## 16. Repository Structure
 
-This repository is actively evolving as a portfolio-grade banking data engineering project. The current implementation focuses on:
+```text
+.github/workflows/   - GitHub Actions CI/CD workflows
+adf/                 - Azure Data Factory pipelines, datasets, linked services and triggers
+config/              - Environment and project-level configuration
+docs/                - Architecture and implementation documentation
+notebooks/           - Databricks notebooks organized by lakehouse layer
+resources/           - Databricks Asset Bundle resource definitions
+sql/                 - DDL, metadata inserts, audit and orchestration SQL scripts
+src/                 - Reusable Python/PySpark modules
+databricks.yml       - Databricks Asset Bundle root configuration
+```
+---
 
-- Bronze ingestion
-- Silver Standardization
-- Silver Conformance
-- Metadata-driven configuration
-- Data quality validation
-- Auditability and modular PySpark design
+## 17. Business Value Demonstrated
 
-Gold-layer analytics and model-ready feature engineering are planned as future extensions.
+This project simulates how a financial institution can build controlled and traceable data pipelines for credit-risk analytics. It demonstrates:
+- Improved data traceability from source files to conformed business entities.
+- Reduced hardcoding through metadata-driven ingestion and transformation.
+- Better data reliability through configurable data quality validation.
+- Support for controlled reruns using pipeline_run_id and business_dt.
+- Audit-friendly processing suitable for regulated banking environments.
+- Preparation of trusted datasets for reporting, BI, and credit-risk feature engineering.
 
 ---
 
-## 17. Author
+## 18. Author
 
 **Gijo Baby**  
 Senior Data Engineer  

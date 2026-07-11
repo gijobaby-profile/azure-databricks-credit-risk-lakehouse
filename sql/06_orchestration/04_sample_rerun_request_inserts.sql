@@ -1,0 +1,115 @@
+-- Databricks notebook source
+-- =====================================================================
+-- Project     : Azure Databricks Credit Risk Lakehouse
+-- Module      : ADF Orchestration Rerun Examples
+-- File        : 04_sample_rerun_request_inserts.sql
+-- Purpose     : Example controlled rerun requests. Keep commented or adapt
+--               values before executing.
+-- =====================================================================
+
+-- COMMAND ----------
+
+
+-- ---------------------------------------------------------------------
+-- Example 1: Backdated full run for one business date
+-- ---------------------------------------------------------------------
+-- INSERT INTO credit_risk_dev.orchestration.rerun_request_control
+-- (
+--     rerun_request_id,
+--     request_status,
+--     business_dt,
+--     run_scope,
+--     run_type,
+--     source_system,
+--     entity_name,
+--     file_pattern_name,
+--     data_file_name,
+--     layer_name,
+--     force_reload,
+--     rerun_reason,
+--     requested_by,
+--     approved_by,
+--     requested_timestamp,
+--     approved_timestamp,
+--     executed_pipeline_run_id,
+--     error_message,
+--     created_timestamp,
+--     updated_timestamp
+-- )
+-- VALUES
+-- (
+--     concat('RR_FULL_', date_format(current_timestamp(), 'yyyyMMddHHmmss')),
+--     'APPROVED',
+--     DATE '2026-06-14',
+--     'FULL',
+--     'BACKDATED',
+--     'home_credit',
+--     NULL,
+--     NULL,
+--     NULL,
+--     NULL,
+--     true,
+--     'Backdated recovery run for missed business date',
+--     'gijo.baby',
+--     'gijo.baby',
+--     current_timestamp(),
+--     current_timestamp(),
+--     NULL,
+--     NULL,
+--     current_timestamp(),
+--     current_timestamp()
+-- );
+
+-- COMMAND ----------
+
+
+-- ---------------------------------------------------------------------
+-- Example 2: File-level rerun for one physical data file
+-- ---------------------------------------------------------------------
+-- INSERT INTO credit_risk_dev.orchestration.rerun_request_control
+-- (
+--     rerun_request_id,
+--     request_status,
+--     business_dt,
+--     run_scope,
+--     run_type,
+--     source_system,
+--     entity_name,
+--     file_pattern_name,
+--     data_file_name,
+--     layer_name,
+--     force_reload,
+--     rerun_reason,
+--     requested_by,
+--     approved_by,
+--     requested_timestamp,
+--     approved_timestamp,
+--     executed_pipeline_run_id,
+--     error_message,
+--     created_timestamp,
+--     updated_timestamp
+-- )
+-- VALUES
+-- (
+--     concat('RR_FILE_', date_format(current_timestamp(), 'yyyyMMddHHmmss')),
+--     'APPROVED',
+--     DATE '2026-06-14',
+--     'FILE',
+--     'RERUN',
+--     'home_credit',
+--     'bureau',
+--     'bureau_files',
+--     'bureau_part001.csv',
+--     'SILVER_STANDARDIZATION',
+--     true,
+--     'Source corrected and file needs controlled reload',
+--     'gijo.baby',
+--     'gijo.baby',
+--     current_timestamp(),
+--     current_timestamp(),
+--     NULL,
+--     NULL,
+--     current_timestamp(),
+--     current_timestamp()
+-- );
+
