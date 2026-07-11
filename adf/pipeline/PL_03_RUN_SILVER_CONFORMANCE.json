@@ -1,5 +1,5 @@
 {
-	"name": "PL_03_RUN_SILVER_CONFORMANCE_Test",
+	"name": "PL_03_RUN_SILVER_CONFORMANCE",
 	"properties": {
 		"description": "Waits for silver_standardization readiness, initializes silver_conformed status rows, reads entity routing configuration from Unity Catalog, and invokes a child pipeline to process entities in parallel.",
 		"activities": [
