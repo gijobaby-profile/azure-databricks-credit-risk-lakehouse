@@ -1372,6 +1372,371 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Runs one Silver Conformance entity. Routes SCD2 entities to the dedicated customer notebook and all other entities to the generic notebook, while updating layer_processing_status.",
+				"activities": [
+					{
+						"name": "NB_SET_ENTITY_RUNNING",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.01:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 120,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+							"baseParameters": {
+								"operation_type": {
+									"value": "UPDATE_LAYER_RUNNING",
+									"type": "Expression"
+								},
+								"catalog_name": {
+									"value": "@pipeline().parameters.p_catalog_name",
+									"type": "Expression"
+								},
+								"business_dt": {
+									"value": "@pipeline().parameters.p_business_dt",
+									"type": "Expression"
+								},
+								"pipeline_run_id": {
+									"value": "@pipeline().parameters.p_pipeline_run_id",
+									"type": "Expression"
+								},
+								"source_system": {
+									"value": "@pipeline().parameters.p_source_system",
+									"type": "Expression"
+								},
+								"entity_name": {
+									"value": "@pipeline().parameters.p_entity_name",
+									"type": "Expression"
+								},
+								"file_pattern_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"layer_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"process_name": {
+									"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AZDBRICKS_DEV",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "IF_ENTITY_IS_SCD2",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "NB_SET_ENTITY_RUNNING",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [
+							{
+								"name": "entity_name",
+								"value": "@pipeline().parameters.p_entity_name"
+							},
+							{
+								"name": "is_scd2",
+								"value": "@pipeline().parameters.p_is_scd2"
+							}
+						],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "NB_RUN_GENERIC_SILVER_CONFORMED",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 1,
+										"retryIntervalInSeconds": 120,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/03_silver_conformance/02_generic_silver_conformed_entity",
+										"baseParameters": {
+											"catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"entity_name": {
+												"value": "@pipeline().parameters.p_entity_name",
+												"type": "Expression"
+											},
+											"business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"pipeline_run_id": {
+												"value": "@pipeline().parameters.p_pipeline_run_id",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_AZDBRICKS_DEV",
+										"type": "LinkedServiceReference"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "NB_RUN_CUSTOMER_SCD2",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 1,
+										"retryIntervalInSeconds": 120,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/03_silver_conformance/01_silver_conformed_customer_scd2",
+										"baseParameters": {
+											"catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"entity_name": {
+												"value": "@pipeline().parameters.p_entity_name",
+												"type": "Expression"
+											},
+											"business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"pipeline_run_id": {
+												"value": "@pipeline().parameters.p_pipeline_run_id",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_AZDBRICKS_DEV",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "NB_SET_ENTITY_SUCCESS",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "IF_ENTITY_IS_SCD2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.01:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 120,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+							"baseParameters": {
+								"operation_type": {
+									"value": "UPDATE_LAYER_SUCCESS",
+									"type": "Expression"
+								},
+								"catalog_name": {
+									"value": "@pipeline().parameters.p_catalog_name",
+									"type": "Expression"
+								},
+								"business_dt": {
+									"value": "@pipeline().parameters.p_business_dt",
+									"type": "Expression"
+								},
+								"pipeline_run_id": {
+									"value": "@pipeline().parameters.p_pipeline_run_id",
+									"type": "Expression"
+								},
+								"source_system": {
+									"value": "@pipeline().parameters.p_source_system",
+									"type": "Expression"
+								},
+								"entity_name": {
+									"value": "@pipeline().parameters.p_entity_name",
+									"type": "Expression"
+								},
+								"file_pattern_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"layer_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"process_name": {
+									"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AZDBRICKS_DEV",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "NB_SET_ENTITY_FAILED",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "IF_ENTITY_IS_SCD2",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.01:00:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 120,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+							"baseParameters": {
+								"operation_type": {
+									"value": "UPDATE_LAYER_FAILED",
+									"type": "Expression"
+								},
+								"catalog_name": {
+									"value": "@pipeline().parameters.p_catalog_name",
+									"type": "Expression"
+								},
+								"business_dt": {
+									"value": "@pipeline().parameters.p_business_dt",
+									"type": "Expression"
+								},
+								"pipeline_run_id": {
+									"value": "@pipeline().parameters.p_pipeline_run_id",
+									"type": "Expression"
+								},
+								"source_system": {
+									"value": "@pipeline().parameters.p_source_system",
+									"type": "Expression"
+								},
+								"entity_name": {
+									"value": "@pipeline().parameters.p_entity_name",
+									"type": "Expression"
+								},
+								"file_pattern_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"layer_name": {
+									"value": "silver_conformed",
+									"type": "Expression"
+								},
+								"process_name": {
+									"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+									"type": "Expression"
+								},
+								"error_message": {
+									"value": "@string(activity('IF_ENTITY_IS_SCD2').error.message)",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_AZDBRICKS_DEV",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "FAIL_CHILD_PIPELINE_AFTER_STATUS_UPDATE",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "NB_SET_ENTITY_FAILED",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": {
+								"value": "@concat('Silver conformed entity failed. entity_name=', pipeline().parameters.p_entity_name, ', is_scd2=', pipeline().parameters.p_is_scd2)",
+								"type": "Expression"
+							},
+							"errorCode": "SILVER_CONFORMED_ENTITY_FAILED"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_business_dt": {
+						"type": "string"
+					},
+					"p_pipeline_run_id": {
+						"type": "string"
+					},
+					"p_catalog_name": {
+						"type": "string",
+						"defaultValue": "credit_risk_dev"
+					},
+					"p_source_system": {
+						"type": "string",
+						"defaultValue": "home_credit"
+					},
+					"p_entity_name": {
+						"type": "string"
+					},
+					"p_is_scd2": {
+						"type": "string",
+						"defaultValue": "false"
+					}
+				},
+				"annotations": [
+					"credit-risk-lakehouse",
+					"silver-conformance",
+					"entity-child",
+					"scd2-routing"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AZDBRICKS_DEV')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_TEST_ADF_DATABRICKS_CONNECTION')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2138,6 +2503,546 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_AZDBRICKS_DEV')]",
 				"[concat(variables('factoryId'), '/pipelines/PL_02_WATCH_FILE_AND_RUN_ENTITY')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Iterates over active Silver Conformance entities returned from Unity Catalog and invokes PL_03A for each entity with controlled parallelism.",
+				"activities": [
+					{
+						"name": "FE_RUN_SILVER_CONFORMED_ENTITIES",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@json(pipeline().parameters.p_entities_json).entities",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "EXEC_PL03A_RUN_ONE_ENTITY",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [
+										{
+											"name": "entity_name",
+											"value": "@item().entity_name"
+										},
+										{
+											"name": "is_scd2",
+											"value": "@string(item().is_scd2)"
+										}
+									],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"p_pipeline_run_id": {
+												"value": "@pipeline().parameters.p_pipeline_run_id",
+												"type": "Expression"
+											},
+											"p_catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"p_source_system": {
+												"value": "@pipeline().parameters.p_source_system",
+												"type": "Expression"
+											},
+											"p_entity_name": {
+												"value": "@item().entity_name",
+												"type": "Expression"
+											},
+											"p_is_scd2": {
+												"value": "@string(equals(toLower(item().entity_name), 'customer_scd2'))",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_business_dt": {
+						"type": "string"
+					},
+					"p_pipeline_run_id": {
+						"type": "string"
+					},
+					"p_catalog_name": {
+						"type": "string",
+						"defaultValue": "credit_risk_dev"
+					},
+					"p_source_system": {
+						"type": "string",
+						"defaultValue": "home_credit"
+					},
+					"p_entities_json": {
+						"type": "string"
+					}
+				},
+				"annotations": [
+					"credit-risk-lakehouse",
+					"silver-conformance",
+					"parallel-execution",
+					"batch-child"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_03_RUN_SILVER_CONFORMANCE')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Waits for silver_standardization readiness, initializes silver_conformed status rows, reads entity routing configuration from Unity Catalog, and invokes a child pipeline to process entities in parallel.",
+				"activities": [
+					{
+						"name": "UNTIL_STANDARDIZATION_READY_OR_TIMEOUT",
+						"type": "Until",
+						"dependsOn": [],
+						"userProperties": [
+							{
+								"name": "business_dt",
+								"value": "@pipeline().parameters.p_business_dt"
+							},
+							{
+								"name": "source_layer",
+								"value": "@pipeline().parameters.p_source_layer_name"
+							},
+							{
+								"name": "max_wait_minutes",
+								"value": "@string(pipeline().parameters.p_max_wait_minutes)"
+							}
+						],
+						"typeProperties": {
+							"expression": {
+								"value": "@or(equals(variables('v_overall_status'), 'READY'), greaterOrEquals(int(variables('v_elapsed_minutes')), pipeline().parameters.p_max_wait_minutes))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "NB_CHECK_SILVER_STANDARDIZATION_STATUS",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.01:00:00",
+										"retry": 1,
+										"retryIntervalInSeconds": 120,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_CHECK_LAYER_PROCESSING_STATUS",
+										"baseParameters": {
+											"p_business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"p_layer_name": {
+												"value": "@pipeline().parameters.p_source_layer_name",
+												"type": "Expression"
+											},
+											"p_catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"p_expected_frequency": {
+												"value": "@pipeline().parameters.p_expected_frequency",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_AZDBRICKS_DEV",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "SET_OVERALL_STATUS",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "NB_CHECK_SILVER_STANDARDIZATION_STATUS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_overall_status",
+										"value": {
+											"value": "@json(activity('NB_CHECK_SILVER_STANDARDIZATION_STATUS').output.runOutput).overall_status",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "IF_NOT_READY_WAIT_AND_INCREMENT",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "SET_OVERALL_STATUS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@and(not(equals(variables('v_overall_status'), 'READY')), less(int(variables('v_elapsed_minutes')), pipeline().parameters.p_max_wait_minutes))",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "WAIT_BEFORE_NEXT_STATUS_CHECK",
+												"type": "Wait",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"waitTimeInSeconds": {
+														"value": "@mul(pipeline().parameters.p_poll_interval_minutes, 60)",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "SET_ELAPSED_MINUTES_TMP",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "WAIT_BEFORE_NEXT_STATUS_CHECK",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "v_elapsed_minutes_tmp",
+													"value": {
+														"value": "@string(add(int(variables('v_elapsed_minutes')), pipeline().parameters.p_poll_interval_minutes))",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "SET_ELAPSED_MINUTES",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "SET_ELAPSED_MINUTES_TMP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "v_elapsed_minutes",
+													"value": {
+														"value": "@variables('v_elapsed_minutes_tmp')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "IF_READY_RUN_SILVER_CONFORMED",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "UNTIL_STANDARDIZATION_READY_OR_TIMEOUT",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(variables('v_overall_status'), 'READY')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "SET_FINAL_MESSAGE_TIMEOUT",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_final_message",
+										"value": {
+											"value": "@concat('Silver conformance skipped. silver_standardization was not READY within max wait time. business_dt=', pipeline().parameters.p_business_dt, ', last_status=', variables('v_overall_status'), ', waited_minutes=', variables('v_elapsed_minutes'))",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.01:00:00",
+										"retry": 1,
+										"retryIntervalInSeconds": 120,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
+										"baseParameters": {
+											"p_business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"p_pipeline_run_id": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											},
+											"p_catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"p_source_system": {
+												"value": "@pipeline().parameters.p_source_system",
+												"type": "Expression"
+											},
+											"p_force_reload": {
+												"value": "@string(pipeline().parameters.p_force_reload)",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_AZDBRICKS_DEV",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "NB_GET_SILVER_CONFORMANCE_ENTITIES",
+									"type": "DatabricksNotebook",
+									"dependsOn": [
+										{
+											"activity": "NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.01:00:00",
+										"retry": 1,
+										"retryIntervalInSeconds": 120,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_GET_SILVER_CONFORMANCE_ENTITIES",
+										"baseParameters": {
+											"p_catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "LS_AZDBRICKS_DEV",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "EXEC_PL03B_RUN_ALL_ENTITIES",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "NB_GET_SILVER_CONFORMANCE_ENTITIES",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_business_dt": {
+												"value": "@pipeline().parameters.p_business_dt",
+												"type": "Expression"
+											},
+											"p_pipeline_run_id": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											},
+											"p_catalog_name": {
+												"value": "@pipeline().parameters.p_catalog_name",
+												"type": "Expression"
+											},
+											"p_source_system": {
+												"value": "@pipeline().parameters.p_source_system",
+												"type": "Expression"
+											},
+											"p_entities_json": {
+												"value": "@activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "SET_FINAL_MESSAGE_READY",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "EXEC_PL03B_RUN_ALL_ENTITIES",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "v_final_message",
+										"value": {
+											"value": "@concat('Silver conformance completed for business_dt=', pipeline().parameters.p_business_dt, '. Entity count=', string(json(activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput).entity_count))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_business_dt": {
+						"type": "string"
+					},
+					"p_catalog_name": {
+						"type": "string",
+						"defaultValue": "credit_risk_dev"
+					},
+					"p_source_system": {
+						"type": "string",
+						"defaultValue": "home_credit"
+					},
+					"p_expected_frequency": {
+						"type": "string",
+						"defaultValue": "monthly"
+					},
+					"p_source_layer_name": {
+						"type": "string",
+						"defaultValue": "silver_standardization"
+					},
+					"p_target_layer_name": {
+						"type": "string",
+						"defaultValue": "silver_conformed"
+					},
+					"p_force_reload": {
+						"type": "bool",
+						"defaultValue": false
+					},
+					"p_max_wait_minutes": {
+						"type": "int",
+						"defaultValue": 120
+					},
+					"p_poll_interval_minutes": {
+						"type": "int",
+						"defaultValue": 5
+					}
+				},
+				"variables": {
+					"v_overall_status": {
+						"type": "String",
+						"defaultValue": "WAITING"
+					},
+					"v_elapsed_minutes": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"v_elapsed_minutes_tmp": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"v_final_message": {
+						"type": "String"
+					}
+				},
+				"annotations": [
+					"credit-risk-lakehouse",
+					"silver-conformance",
+					"metadata-driven",
+					"layer-orchestration"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_AZDBRICKS_DEV')]",
+				"[concat(variables('factoryId'), '/pipelines/PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES')]"
 			]
 		}
 	]
