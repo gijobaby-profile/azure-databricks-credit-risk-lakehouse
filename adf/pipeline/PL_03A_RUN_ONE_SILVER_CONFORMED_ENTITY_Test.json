@@ -1,0 +1,358 @@
+{
+	"name": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY_Test",
+	"properties": {
+		"description": "Runs one Silver Conformance entity. Routes SCD2 entities to the dedicated customer notebook and all other entities to the generic notebook, while updating layer_processing_status.",
+		"activities": [
+			{
+				"name": "NB_SET_ENTITY_RUNNING",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.01:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 120,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+					"baseParameters": {
+						"operation_type": {
+							"value": "UPDATE_LAYER_RUNNING",
+							"type": "Expression"
+						},
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@pipeline().parameters.p_pipeline_run_id",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"entity_name": {
+							"value": "@pipeline().parameters.p_entity_name",
+							"type": "Expression"
+						},
+						"file_pattern_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"layer_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"process_name": {
+							"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "IF_ENTITY_IS_SCD2",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "NB_SET_ENTITY_RUNNING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [
+					{
+						"name": "entity_name",
+						"value": "@pipeline().parameters.p_entity_name"
+					},
+					{
+						"name": "is_scd2",
+						"value": "@pipeline().parameters.p_is_scd2"
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "NB_RUN_GENERIC_SILVER_CONFORMED",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/03_silver_conformance/02_generic_silver_conformed_entity",
+								"baseParameters": {
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "NB_RUN_CUSTOMER_SCD2",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/03_silver_conformance/01_silver_conformed_customer_scd2",
+								"baseParameters": {
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_entity_name",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().parameters.p_pipeline_run_id",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "NB_SET_ENTITY_SUCCESS",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "IF_ENTITY_IS_SCD2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.01:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 120,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+					"baseParameters": {
+						"operation_type": {
+							"value": "UPDATE_LAYER_SUCCESS",
+							"type": "Expression"
+						},
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@pipeline().parameters.p_pipeline_run_id",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"entity_name": {
+							"value": "@pipeline().parameters.p_entity_name",
+							"type": "Expression"
+						},
+						"file_pattern_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"layer_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"process_name": {
+							"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "NB_SET_ENTITY_FAILED",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "IF_ENTITY_IS_SCD2",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.01:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 120,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+					"baseParameters": {
+						"operation_type": {
+							"value": "UPDATE_LAYER_FAILED",
+							"type": "Expression"
+						},
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@pipeline().parameters.p_business_dt",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@pipeline().parameters.p_pipeline_run_id",
+							"type": "Expression"
+						},
+						"source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"entity_name": {
+							"value": "@pipeline().parameters.p_entity_name",
+							"type": "Expression"
+						},
+						"file_pattern_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"layer_name": {
+							"value": "silver_conformed",
+							"type": "Expression"
+						},
+						"process_name": {
+							"value": "@if(equals(toLower(string(pipeline().parameters.p_is_scd2)), 'true'), '01_silver_conformed_customer_scd2', '02_generic_silver_conformed_entity')",
+							"type": "Expression"
+						},
+						"error_message": {
+							"value": "@string(activity('IF_ENTITY_IS_SCD2').error.message)",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "FAIL_CHILD_PIPELINE_AFTER_STATUS_UPDATE",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "NB_SET_ENTITY_FAILED",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": {
+						"value": "@concat('Silver conformed entity failed. entity_name=', pipeline().parameters.p_entity_name, ', is_scd2=', pipeline().parameters.p_is_scd2)",
+						"type": "Expression"
+					},
+					"errorCode": "SILVER_CONFORMED_ENTITY_FAILED"
+				}
+			}
+		],
+		"parameters": {
+			"p_business_dt": {
+				"type": "string"
+			},
+			"p_pipeline_run_id": {
+				"type": "string"
+			},
+			"p_catalog_name": {
+				"type": "string",
+				"defaultValue": "credit_risk_dev"
+			},
+			"p_source_system": {
+				"type": "string",
+				"defaultValue": "home_credit"
+			},
+			"p_entity_name": {
+				"type": "string"
+			},
+			"p_is_scd2": {
+				"type": "string",
+				"defaultValue": "false"
+			}
+		},
+		"annotations": [
+			"credit-risk-lakehouse",
+			"silver-conformance",
+			"entity-child",
+			"scd2-routing"
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
