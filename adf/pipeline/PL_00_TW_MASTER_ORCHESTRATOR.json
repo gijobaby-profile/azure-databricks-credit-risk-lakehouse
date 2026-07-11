@@ -1,5 +1,5 @@
 {
-	"name": "PL_00_TW_MASTER_ORCHESTRATOR_ETE",
+	"name": "PL_00_TW_MASTER_ORCHESTRATOR",
 	"properties": {
 		"description": "Monthly tumbling-window master pipeline. Initializes the orchestration run, loads monthly file metadata, executes Bronze and Silver Standardization per entity, then runs Silver Conformance and Gold sequentially, and finalizes the end-to-end run.",
 		"activities": [
