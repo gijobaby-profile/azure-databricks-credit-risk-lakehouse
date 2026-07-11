@@ -1,7 +1,7 @@
 {
 	"name": "PL_03_RUN_SILVER_CONFORMANCE",
 	"properties": {
-		"description": "Waits for silver_standardization to become READY, initializes silver_conformed control rows, reads conformance entities from config, and runs each entity in parallel through a child pipeline.",
+		"description": "Waits for silver_standardization readiness, initializes silver_conformed status rows, reads entity routing configuration from Unity Catalog, and invokes a child pipeline to process entities in parallel.",
 		"activities": [
 			{
 				"name": "UNTIL_STANDARDIZATION_READY_OR_TIMEOUT",
@@ -204,7 +204,7 @@
 							"typeProperties": {
 								"variableName": "v_final_message",
 								"value": {
-									"value": "@concat('Silver conformance skipped because silver_standardization was not READY within max wait time. business_dt=', pipeline().parameters.p_business_dt, ', last_status=', variables('v_overall_status'), ', waited_minutes=', variables('v_elapsed_minutes'))",
+									"value": "@concat('Silver conformance skipped. silver_standardization was not READY within max wait time. business_dt=', pipeline().parameters.p_business_dt, ', last_status=', variables('v_overall_status'), ', waited_minutes=', variables('v_elapsed_minutes'))",
 									"type": "Expression"
 								}
 							}
@@ -212,7 +212,7 @@
 					],
 					"ifTrueActivities": [
 						{
-							"name": "NB_INIT_SILVER_CONFORMED_STATUS_AND_CONTROL",
+							"name": "NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
 							"type": "DatabricksNotebook",
 							"dependsOn": [],
 							"policy": {
@@ -224,7 +224,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_INIT_SILVER_CONFORMED_STATUS_AND_CONTROL_SIMPLE",
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
 								"baseParameters": {
 									"p_business_dt": {
 										"value": "@pipeline().parameters.p_business_dt",
@@ -258,7 +258,7 @@
 							"type": "DatabricksNotebook",
 							"dependsOn": [
 								{
-									"activity": "NB_INIT_SILVER_CONFORMED_STATUS_AND_CONTROL",
+									"activity": "NB_INIT_SILVER_CONFORMED_LAYER_STATUS_AND_CONTROL",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -287,8 +287,8 @@
 							}
 						},
 						{
-							"name": "FE_RUN_SILVER_CONFORMED_ENTITIES",
-							"type": "ForEach",
+							"name": "EXEC_PL03B_RUN_ALL_ENTITIES",
+							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
 									"activity": "NB_GET_SILVER_CONFORMANCE_ENTITIES",
@@ -297,50 +297,38 @@
 									]
 								}
 							],
+							"policy": {
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
-								"items": {
-									"value": "@json(activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput).entities",
-									"type": "Expression"
+								"pipeline": {
+									"referenceName": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES",
+									"type": "PipelineReference"
 								},
-								"isSequential": false,
-								"batchCount": 5,
-								"activities": [
-									{
-										"name": "EP_RUN_ONE_SILVER_CONFORMED_ENTITY",
-										"type": "ExecutePipeline",
-										"dependsOn": [],
-										"policy": {
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"waitOnCompletion": true,
-											"parameters": {
-												"p_business_dt": {
-													"value": "@pipeline().parameters.p_business_dt",
-													"type": "Expression"
-												},
-												"p_pipeline_run_id": {
-													"value": "@pipeline().RunId",
-													"type": "Expression"
-												},
-												"p_catalog_name": {
-													"value": "@pipeline().parameters.p_catalog_name",
-													"type": "Expression"
-												},
-												"p_entity_name": {
-													"value": "@item().entity_name",
-													"type": "Expression"
-												},
-												"p_expected_frequency": {
-													"value": "@pipeline().parameters.p_expected_frequency",
-													"type": "Expression"
-												}
-											}
-										}
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"p_pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"p_catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"p_source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"p_entities_json": {
+										"value": "@activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput",
+										"type": "Expression"
 									}
-								]
+								}
 							}
 						},
 						{
@@ -348,7 +336,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "FE_RUN_SILVER_CONFORMED_ENTITIES",
+									"activity": "EXEC_PL03B_RUN_ALL_ENTITIES",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -362,7 +350,7 @@
 							"typeProperties": {
 								"variableName": "v_final_message",
 								"value": {
-									"value": "@concat('Silver conformance completed for business_dt=', pipeline().parameters.p_business_dt, ', entity_count=', string(json(activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput).entity_count), ', waited_minutes=', variables('v_elapsed_minutes'))",
+									"value": "@concat('Silver conformance completed for business_dt=', pipeline().parameters.p_business_dt, '. Entity count=', string(json(activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput).entity_count))",
 									"type": "Expression"
 								}
 							}
@@ -395,6 +383,10 @@
 				"type": "string",
 				"defaultValue": "silver_conformed"
 			},
+			"p_force_reload": {
+				"type": "bool",
+				"defaultValue": false
+			},
 			"p_max_wait_minutes": {
 				"type": "int",
 				"defaultValue": 120
@@ -402,10 +394,6 @@
 			"p_poll_interval_minutes": {
 				"type": "int",
 				"defaultValue": 5
-			},
-			"p_force_reload": {
-				"type": "bool",
-				"defaultValue": false
 			}
 		},
 		"variables": {
@@ -429,7 +417,7 @@
 			"credit-risk-lakehouse",
 			"silver-conformance",
 			"metadata-driven",
-			"parallel-child-pipeline"
+			"layer-orchestration"
 		]
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
