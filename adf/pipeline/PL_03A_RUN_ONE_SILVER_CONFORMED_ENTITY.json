@@ -1,7 +1,7 @@
 {
 	"name": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
 	"properties": {
-		"description": "Runs one silver_conformed entity. If is_scd2=true, calls the customer SCD2 notebook; otherwise calls the generic conformed entity notebook. Updates layer_processing_status using the reusable orchestration status notebook.",
+		"description": "Runs one Silver Conformance entity. Routes SCD2 entities to the dedicated customer notebook and all other entities to the generic notebook, while updating layer_processing_status.",
 		"activities": [
 			{
 				"name": "NB_SET_ENTITY_RUNNING",
@@ -350,10 +350,9 @@
 		"annotations": [
 			"credit-risk-lakehouse",
 			"silver-conformance",
-			"child",
+			"entity-child",
 			"scd2-routing"
-		],
-		"lastPublishTime": "2026-07-03T00:00:00Z"
+		]
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
