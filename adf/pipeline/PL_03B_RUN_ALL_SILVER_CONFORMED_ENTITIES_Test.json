@@ -35,7 +35,7 @@
 							],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY",
+									"referenceName": "PL_03A_RUN_ONE_SILVER_CONFORMED_ENTITY_Test",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -61,7 +61,7 @@
 										"type": "Expression"
 									},
 									"p_is_scd2": {
-										"value": "@string(item().is_scd2)",
+										"value": "@string(equals(toLower(item().entity_name), 'customer_scd2'))",
 										"type": "Expression"
 									}
 								}

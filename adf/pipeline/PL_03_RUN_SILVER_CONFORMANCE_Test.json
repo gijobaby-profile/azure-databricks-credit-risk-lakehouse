@@ -302,7 +302,33 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"waitOnCompletion": true
+								"pipeline": {
+									"referenceName": "PL_03B_RUN_ALL_SILVER_CONFORMED_ENTITIES_Test",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"p_pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"p_catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"p_source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"p_entities_json": {
+										"value": "@activity('NB_GET_SILVER_CONFORMANCE_ENTITIES').output.runOutput",
+										"type": "Expression"
+									}
+								}
 							}
 						},
 						{
