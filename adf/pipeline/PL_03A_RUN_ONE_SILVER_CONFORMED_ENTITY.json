@@ -89,20 +89,20 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "NB_RUN_GENERIC_SILVER_CONFORMED",
-							"type": "DatabricksNotebook",
+							"name": "JOB_02B_ENTITY_CONFORMANCE",
+							"type": "DatabricksJob",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
-								"retry": 1,
-								"retryIntervalInSeconds": 120,
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/03_silver_conformance/02_generic_silver_conformed_entity",
-								"baseParameters": {
+								"jobId": "304418659436891",
+								"jobParameters": {
 									"catalog_name": {
 										"value": "@pipeline().parameters.p_catalog_name",
 										"type": "Expression"
