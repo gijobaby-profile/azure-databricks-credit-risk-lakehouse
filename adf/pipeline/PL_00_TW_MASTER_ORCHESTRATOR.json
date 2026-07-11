@@ -1,7 +1,7 @@
 {
-	"name": "PL_00_TW_MASTER_ORCHESTRATOR",
+	"name": "PL_00_TW_MASTER_ORCHESTRATOR_ETE",
 	"properties": {
-		"description": "DAILY-only master pipeline. Init rows, lookup DAILY file metadata, call PL_02 in parallel, finalize run.",
+		"description": "Monthly tumbling-window master pipeline. Initializes the orchestration run, loads monthly file metadata, executes Bronze and Silver Standardization per entity, then runs Silver Conformance and Gold sequentially, and finalizes the end-to-end run.",
 		"activities": [
 			{
 				"name": "SET_PIPELINE_RUN_ID",
@@ -208,7 +208,7 @@
 										"type": "Expression"
 									},
 									"p_source_folder_path": {
-										"value": "@replace(replace(item().source_base_path_pattern, '{business_dt_token}', variables('v_business_dt_token')), '{business_dt}', pipeline().parameters.p_business_dt)",
+										"value": "@replace(replace(item().source_base_path_pattern, '{business_dt_token}', variables('v_business_dt_token')), '{business_dt}', variables('v_business_dt'))",
 										"type": "Expression"
 									},
 									"p_data_file_name": {
@@ -255,109 +255,6 @@
 							}
 						}
 					]
-				}
-			},
-			{
-				"name": "DBR_FINALIZE_DAILY_RUN",
-				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "FE_MONTHLY_FILES",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
-					"baseParameters": {
-						"catalog_name": {
-							"value": "@pipeline().parameters.p_catalog_name",
-							"type": "Expression"
-						},
-						"business_dt": {
-							"value": "@variables('v_business_dt')",
-							"type": "Expression"
-						},
-						"pipeline_run_id": {
-							"value": "@variables('v_pipeline_run_id')",
-							"type": "Expression"
-						},
-						"final_status": "SUCCESS",
-						"error_message": "None"
-					}
-				},
-				"linkedServiceName": {
-					"referenceName": "LS_AZDBRICKS_DEV",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "DBR_FINALIZE_FAILED_RUN",
-				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "FE_MONTHLY_FILES",
-						"dependencyConditions": [
-							"Failed"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
-					"baseParameters": {
-						"catalog_name": {
-							"value": "@pipeline().parameters.p_catalog_name",
-							"type": "Expression"
-						},
-						"business_dt": {
-							"value": "@variables('v_business_dt')",
-							"type": "Expression"
-						},
-						"pipeline_run_id": {
-							"value": "@variables('v_pipeline_run_id')",
-							"type": "Expression"
-						},
-						"final_status": "FAILED",
-						"error_message": "One or more MONTHLY file watchers failed"
-					}
-				},
-				"linkedServiceName": {
-					"referenceName": "LS_AZDBRICKS_DEV",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "FAIL_DAILY_MASTER_RUN",
-				"type": "Fail",
-				"dependsOn": [
-					{
-						"activity": "DBR_FINALIZE_FAILED_RUN",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"message": "PL_00_TW_MASTER_ORCHESTRATOR failed because one or more DAILY file watchers failed.",
-					"errorCode": "PL00_MONTHLY_FAILED"
 				}
 			},
 			{
@@ -414,6 +311,265 @@
 					"referenceName": "LS_AZDBRICKS_DEV",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "EXEC_PL_03_SILVER_CONFORMANCE",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "FE_MONTHLY_FILES",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "business_dt",
+						"value": "@variables('v_business_dt')"
+					},
+					{
+						"name": "target_layer",
+						"value": "silver_conformed"
+					}
+				],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_03_RUN_SILVER_CONFORMANCE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"p_business_dt": {
+							"value": "@variables('v_business_dt')",
+							"type": "Expression"
+						},
+						"p_catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"p_source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"p_expected_frequency": {
+							"value": "@pipeline().parameters.p_expected_frequency",
+							"type": "Expression"
+						},
+						"p_source_layer_name": "silver_standardization",
+						"p_target_layer_name": "silver_conformed",
+						"p_force_reload": {
+							"value": "@pipeline().parameters.p_force_reload",
+							"type": "Expression"
+						},
+						"p_max_wait_minutes": {
+							"value": "@pipeline().parameters.p_layer_max_wait_minutes",
+							"type": "Expression"
+						},
+						"p_poll_interval_minutes": {
+							"value": "@pipeline().parameters.p_layer_poll_interval_minutes",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "EXEC_PL_04_GOLD",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "EXEC_PL_03_SILVER_CONFORMANCE",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "business_dt",
+						"value": "@variables('v_business_dt')"
+					},
+					{
+						"name": "target_layer",
+						"value": "gold"
+					},
+					{
+						"name": "rerun_scope",
+						"value": "@pipeline().parameters.p_gold_rerun_scope"
+					}
+				],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_04_RUN_GOLD",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"p_business_dt": {
+							"value": "@variables('v_business_dt')",
+							"type": "Expression"
+						},
+						"p_catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"p_source_system": {
+							"value": "@pipeline().parameters.p_source_system",
+							"type": "Expression"
+						},
+						"p_expected_frequency": {
+							"value": "@pipeline().parameters.p_expected_frequency",
+							"type": "Expression"
+						},
+						"p_source_layer_name": "silver_conformed",
+						"p_target_layer_name": "gold",
+						"p_gold_entity_name": "JOB_03_GOLD",
+						"p_gold_job_id": {
+							"value": "@pipeline().parameters.p_gold_job_id",
+							"type": "Expression"
+						},
+						"p_rerun_scope": {
+							"value": "@pipeline().parameters.p_gold_rerun_scope",
+							"type": "Expression"
+						},
+						"p_force_reload": {
+							"value": "@pipeline().parameters.p_force_reload",
+							"type": "Expression"
+						},
+						"p_max_wait_minutes": {
+							"value": "@pipeline().parameters.p_layer_max_wait_minutes",
+							"type": "Expression"
+						},
+						"p_poll_interval_minutes": {
+							"value": "@pipeline().parameters.p_layer_poll_interval_minutes",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "DBR_FINALIZE_MASTER_SUCCESS",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "EXEC_PL_04_GOLD",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@variables('v_business_dt')",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@variables('v_pipeline_run_id')",
+							"type": "Expression"
+						},
+						"final_status": "SUCCESS",
+						"error_message": "None"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "DBR_FINALIZE_MASTER_FAILED",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "FE_MONTHLY_FILES",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "EXEC_PL_03_SILVER_CONFORMANCE",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "EXEC_PL_04_GOLD",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_FINALIZE_ADF_PIPELINE_RUN",
+					"baseParameters": {
+						"catalog_name": {
+							"value": "@pipeline().parameters.p_catalog_name",
+							"type": "Expression"
+						},
+						"business_dt": {
+							"value": "@variables('v_business_dt')",
+							"type": "Expression"
+						},
+						"pipeline_run_id": {
+							"value": "@variables('v_pipeline_run_id')",
+							"type": "Expression"
+						},
+						"final_status": "FAILED",
+						"error_message": "Bronze/Silver Standardization, Silver Conformance, or Gold processing failed"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_AZDBRICKS_DEV",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "FAIL_MASTER_RUN",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "DBR_FINALIZE_MASTER_FAILED",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": {
+						"value": "@concat('PL_00_TW_MASTER_ORCHESTRATOR failed for business_dt=', variables('v_business_dt'), '. Review the failed child pipeline and orchestration tables.')",
+						"type": "Expression"
+					},
+					"errorCode": "PL00_END_TO_END_FAILED"
+				}
 			}
 		],
 		"parameters": {
@@ -447,6 +603,25 @@
 			"p_run_scope": {
 				"type": "String",
 				"defaultValue": "FULL"
+			},
+			"p_expected_frequency": {
+				"type": "String",
+				"defaultValue": "monthly"
+			},
+			"p_gold_job_id": {
+				"type": "String"
+			},
+			"p_gold_rerun_scope": {
+				"type": "String",
+				"defaultValue": "FULL"
+			},
+			"p_layer_max_wait_minutes": {
+				"type": "Int",
+				"defaultValue": 120
+			},
+			"p_layer_poll_interval_minutes": {
+				"type": "Int",
+				"defaultValue": 5
 			}
 		},
 		"variables": {
@@ -461,8 +636,13 @@
 			}
 		},
 		"annotations": [
-			"daily-only",
-			"master-orchestrator"
+			"credit-risk-lakehouse",
+			"monthly-tumbling-window",
+			"end-to-end-orchestration",
+			"bronze",
+			"silver-standardization",
+			"silver-conformed",
+			"gold"
 		]
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
