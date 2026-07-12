@@ -1,0 +1,564 @@
+{
+	"name": "PL_04_RUN_GOLD",
+	"properties": {
+		"description": "Waits until all required silver_conformed entities are complete, creates or updates the Gold orchestration row, runs Databricks JOB_03_GOLD, and records Gold SUCCESS or FAILED status.",
+		"activities": [
+			{
+				"name": "UNTIL_SILVER_CONFORMED_READY_OR_TIMEOUT",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [
+					{
+						"name": "business_dt",
+						"value": "@pipeline().parameters.p_business_dt"
+					},
+					{
+						"name": "source_layer",
+						"value": "@pipeline().parameters.p_source_layer_name"
+					},
+					{
+						"name": "max_wait_minutes",
+						"value": "@string(pipeline().parameters.p_max_wait_minutes)"
+					}
+				],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(equals(variables('v_silver_conformed_status'), 'READY'), greaterOrEquals(int(variables('v_elapsed_minutes')), pipeline().parameters.p_max_wait_minutes))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "NB_CHECK_SILVER_CONFORMED_STATUS",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.01:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_CHECK_LAYER_PROCESSING_STATUS",
+								"baseParameters": {
+									"p_business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"p_layer_name": {
+										"value": "@pipeline().parameters.p_source_layer_name",
+										"type": "Expression"
+									},
+									"p_catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"p_expected_frequency": {
+										"value": "@pipeline().parameters.p_expected_frequency",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "SET_SILVER_CONFORMED_STATUS",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "NB_CHECK_SILVER_CONFORMED_STATUS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "v_silver_conformed_status",
+								"value": {
+									"value": "@json(activity('NB_CHECK_SILVER_CONFORMED_STATUS').output.runOutput).overall_status",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "IF_NOT_READY_WAIT_AND_INCREMENT",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "SET_SILVER_CONFORMED_STATUS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@and(not(equals(variables('v_silver_conformed_status'), 'READY')), less(int(variables('v_elapsed_minutes')), pipeline().parameters.p_max_wait_minutes))",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "WAIT_BEFORE_NEXT_STATUS_CHECK",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": {
+												"value": "@mul(pipeline().parameters.p_poll_interval_minutes, 60)",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "SET_ELAPSED_MINUTES_TMP",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "WAIT_BEFORE_NEXT_STATUS_CHECK",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "v_elapsed_minutes_tmp",
+											"value": {
+												"value": "@string(add(int(variables('v_elapsed_minutes')), pipeline().parameters.p_poll_interval_minutes))",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "SET_ELAPSED_MINUTES",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "SET_ELAPSED_MINUTES_TMP",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "v_elapsed_minutes",
+											"value": {
+												"value": "@variables('v_elapsed_minutes_tmp')",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "IF_SILVER_CONFORMED_READY",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "UNTIL_SILVER_CONFORMED_READY_OR_TIMEOUT",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(variables('v_silver_conformed_status'), 'READY')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "FAIL_SILVER_CONFORMED_NOT_READY",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@concat('Gold processing was not started because silver_conformed did not become READY. business_dt=', pipeline().parameters.p_business_dt, ', last_status=', variables('v_silver_conformed_status'), ', waited_minutes=', variables('v_elapsed_minutes'))",
+									"type": "Expression"
+								},
+								"errorCode": "SILVER_CONFORMED_NOT_READY"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "NB_SET_GOLD_RUNNING",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.01:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": {
+										"value": "UPDATE_LAYER_RUNNING",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"layer_name": {
+										"value": "@pipeline().parameters.p_target_layer_name",
+										"type": "Expression"
+									},
+									"process_name": {
+										"value": "JOB_03_GOLD",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "RUN_JOB_03_GOLD",
+							"description": "Runs the existing Databricks workflow JOB_03_GOLD and waits for completion.",
+							"type": "DatabricksJob",
+							"dependsOn": [
+								{
+									"activity": "NB_SET_GOLD_RUNNING",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "job_name",
+									"value": "JOB_03_GOLD"
+								},
+								{
+									"name": "business_dt",
+									"value": "@pipeline().parameters.p_business_dt"
+								},
+								{
+									"name": "rerun_scope",
+									"value": "@pipeline().parameters.p_rerun_scope"
+								}
+							],
+							"typeProperties": {
+								"jobId": "1059985457291720",
+								"jobParameters": {
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"rerun_scope": {
+										"value": "@pipeline().parameters.p_rerun_scope",
+										"type": "Expression"
+									},
+									"force_reload": {
+										"value": "@string(pipeline().parameters.p_force_reload)",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "NB_SET_GOLD_SUCCESS",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "RUN_JOB_03_GOLD",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.01:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": {
+										"value": "UPDATE_LAYER_SUCCESS",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"layer_name": {
+										"value": "@pipeline().parameters.p_target_layer_name",
+										"type": "Expression"
+									},
+									"process_name": {
+										"value": "JOB_03_GOLD",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "NB_SET_GOLD_FAILED",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "RUN_JOB_03_GOLD",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.01:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 120,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Users/gijobaby.info@gmail.com/azure-databricks-credit-risk-lakehouse/notebooks/07_orchestration/NB_UPDATE_ADF_ORCHESTRATION_STATUS",
+								"baseParameters": {
+									"operation_type": {
+										"value": "UPDATE_LAYER_FAILED",
+										"type": "Expression"
+									},
+									"catalog_name": {
+										"value": "@pipeline().parameters.p_catalog_name",
+										"type": "Expression"
+									},
+									"business_dt": {
+										"value": "@pipeline().parameters.p_business_dt",
+										"type": "Expression"
+									},
+									"pipeline_run_id": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"source_system": {
+										"value": "@pipeline().parameters.p_source_system",
+										"type": "Expression"
+									},
+									"entity_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"file_pattern_name": {
+										"value": "@pipeline().parameters.p_gold_entity_name",
+										"type": "Expression"
+									},
+									"layer_name": {
+										"value": "@pipeline().parameters.p_target_layer_name",
+										"type": "Expression"
+									},
+									"process_name": {
+										"value": "JOB_03_GOLD",
+										"type": "Expression"
+									},
+									"error_message": {
+										"value": "@string(activity('RUN_JOB_03_GOLD').error.message)",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_AZDBRICKS_DEV",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "FAIL_GOLD_PIPELINE_AFTER_STATUS_UPDATE",
+							"type": "Fail",
+							"dependsOn": [
+								{
+									"activity": "NB_SET_GOLD_FAILED",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@concat('JOB_03_GOLD failed for business_dt=', pipeline().parameters.p_business_dt, ', rerun_scope=', pipeline().parameters.p_rerun_scope)",
+									"type": "Expression"
+								},
+								"errorCode": "GOLD_JOB_FAILED"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_business_dt": {
+				"type": "string"
+			},
+			"p_catalog_name": {
+				"type": "string",
+				"defaultValue": "credit_risk_dev"
+			},
+			"p_source_system": {
+				"type": "string",
+				"defaultValue": "home_credit"
+			},
+			"p_expected_frequency": {
+				"type": "string",
+				"defaultValue": "monthly"
+			},
+			"p_source_layer_name": {
+				"type": "string",
+				"defaultValue": "silver_conformed"
+			},
+			"p_target_layer_name": {
+				"type": "string",
+				"defaultValue": "gold"
+			},
+			"p_gold_entity_name": {
+				"type": "string",
+				"defaultValue": "JOB_03_GOLD"
+			},
+			"p_gold_job_id": {
+				"type": "string"
+			},
+			"p_rerun_scope": {
+				"type": "string",
+				"defaultValue": "FULL"
+			},
+			"p_force_reload": {
+				"type": "bool",
+				"defaultValue": false
+			},
+			"p_max_wait_minutes": {
+				"type": "int",
+				"defaultValue": 120
+			},
+			"p_poll_interval_minutes": {
+				"type": "int",
+				"defaultValue": 5
+			}
+		},
+		"variables": {
+			"v_silver_conformed_status": {
+				"type": "String",
+				"defaultValue": "WAITING"
+			},
+			"v_elapsed_minutes": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"v_elapsed_minutes_tmp": {
+				"type": "String",
+				"defaultValue": "0"
+			}
+		},
+		"annotations": [
+			"credit-risk-lakehouse",
+			"gold",
+			"JOB_03_GOLD",
+			"metadata-driven",
+			"rerun-scope"
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
