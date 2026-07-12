@@ -461,10 +461,10 @@ This project is implemented as a production-inspired Azure Databricks credit-ris
 | CI/CD | GitHub Actions Workflow Structure | In Progress | Workflow files are being prepared for validation and deployment automation. |
 | Azure Data Factory | Linked Services | Completed | Linked services are configured for ADLS, Azure Databricks, and Key Vault integration. |
 | Azure Data Factory | Datasets | Completed | ADF datasets are being configured for source, control, and orchestration metadata access. |
-| Azure Data Factory | Test Pipeline | Planned | A validation pipeline will confirm linked services, parameters, and connectivity. |
-| Azure Data Factory | Databricks Test Execution | In Progress | ADF will trigger a Databricks notebook/job to validate execution from ADF to Databricks. |
-| Azure Data Factory | File Watcher Pipeline | In Progress | A file-watcher pipeline will check landing-zone file availability before downstream processing starts. |
-| Azure Data Factory | Main Orchestration Pipeline | In Progress | The main orchestration pipeline will coordinate Bronze, Silver, Conformed, and Gold execution using dependency checks and business date parameters. |
+| Azure Data Factory | Test Pipeline | Completed | A validation pipeline will confirm linked services, parameters, and connectivity. |
+| Azure Data Factory | Databricks Test Execution | Completed | ADF will trigger a Databricks notebook/job to validate execution from ADF to Databricks. |
+| Azure Data Factory | File Watcher Pipeline | Completed | A file-watcher pipeline will check landing-zone file availability before downstream processing starts. |
+| Azure Data Factory | Main Orchestration Pipeline | Completed | The main orchestration pipeline will coordinate Bronze, Silver, Conformed, and Gold execution using dependency checks and business date parameters. |
 
 
 ### 15.2. Phase 2 Extensions
